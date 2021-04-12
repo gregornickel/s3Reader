@@ -1,0 +1,10 @@
+.vscode
+workspace.code-workspace
+
+# Build directories
+build/
+build-debug/
+build-release/
+
+# macOS
+.DS_Store
