@@ -6,5 +6,8 @@ s3Reader/build/
 s3Reader/build-debug/
 s3Reader/build-release/
 
+# Exclude directories
+plots/example
+
 # macOS
 .DS_Store

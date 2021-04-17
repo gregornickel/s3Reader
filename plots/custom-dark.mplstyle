@@ -1,0 +1,32 @@
+## Custom stylesheet for s3 plots
+
+lines.linewidth:   1.0             # linewidth of plotted curves
+
+text.color:        (1, 1, 1, 0.75) # title, legend, etc.
+
+axes.facecolor:    22272E          # background color of the area enclosed by the axes
+axes.edgecolor:    (1, 1, 1, 0.75)
+axes.linewidth:    0.8             # edge line width
+axes.grid:         True            # display grid or not
+axes.grid.axis:    both            # which axis the grid should apply to
+axes.grid.which:   major           # grid lines at {major, minor, both} ticks
+axes.labelcolor:   (1, 1, 1, 0.75)
+axes.prop_cycle:   cycler('color', ['FF5555', '55AAFF', 'FFFF55', '55FF55', 'FFAA55', '55FFFF', 'FF55FF', '444444', 'F0F0F0', '4141FF', 'CC5500', '909090', 'AA00E1', '008000'])
+
+xtick.color:       (1, 1, 1, 0.75)
+ytick.color:       (1, 1, 1, 0.75)
+
+grid.color:        white
+grid.linestyle:    -               # solid
+grid.linewidth:    0.8             # in points
+grid.alpha:        0.05            # transparency, between 0.0 and 1.0
+
+figure.facecolor:  22272E
+figure.edgecolor:  black
+
+legend.loc:        best
+legend.frameon:    True            # if True, draw the legend on a background patch
+legend.framealpha: 0.3             # legend patch transparency
+legend.facecolor:  black           # inherit from axes.facecolor; or color spec
+legend.edgecolor:  black           # background patch boundary color
+legend.fancybox:   True            # round edges

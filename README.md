@@ -50,7 +50,25 @@ Note:
 
 ## Plots
 
+Matplotlib is used to create plots. 
 
+Note: Only for prototyping
+
+1. Requirements:
+
+   - Miniconda installation
+
+2. Create the environment from the `environment.yml` file: 
+   ```shell
+   $ conda env create -f environment.yml
+   ```
+   - Activate the new environment with: `$ conda activate s3`
+   - Verify that the new environment was installed correctly: `$ conda env list`
+
+3. Place matplotlib stylesheet in the `stylelib` folder 
+   ```
+   ../.conda/envs/s3/Lib/site-packages/matplotlib/mpl-data/stylelib`
+   ```
 
 ## Twitch Overlay
 
