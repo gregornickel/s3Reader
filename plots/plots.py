@@ -8,47 +8,67 @@ import time
 plt.style.use('custom-dark')
 
 
-def get_name(json_filename, player_number):
-    with open(json_filename, 'rb') as f:
-        object = ijson.items(f, 'stats.player' + str(player_number) + '.name')
-        for name in object:
-            return name
+# Get json data of player i by property ['name', 'team', 'race', 'points', 'settlers', 'buildings', 'food', 'mines', 'gold', 'mana', 'soldiers', 'fights']
+def get_player_values(filename, player_number, property):
+    with open(filename, 'rb') as f:
+        object = ijson.items(f, 'stats.player' + str(player_number) + '.' + property)
+        for data in object:
+            return data
 
 
-# Get numpy array from original json stats-file
-def get_np_array(json_filename, player_number, category):
-    with open(json_filename, 'rb') as f:
-        object = ijson.items(f, 'stats.player' + str(player_number) + '.' + category)
-        for numbers in object:
-            return np.array(numbers)
+# Get json about game by property ['date', 'time', 'numberOfPlayers', 'map', 'rules']
+def get_general_values(filename, property):
+    with open(filename, 'rb') as f:
+        object = ijson.items(f, 'general.' + property)
+        for data in object:
+            return data
 
 
-# Append numpy arrays from multiple saves 
-def combine_saves(json_filename_list, player_number, category):
-    combined_numbers = np.array([])
-    for json_filename in json_filename_list:
-        combined_numbers.append(get_np_array(json_filename, player_number, category))
-    #TODO: clean-up
-    return combined_numbers
+# Append multiple saves 
+def combine_values(filename_list, player_number, property):
+    combined_values = np.array([], dtype=np.int64)
+    for filename in filename_list:
+        values = np.array(get_player_values(filename, player_number, property), dtype=np.int64)
+        combined_values = np.append(combined_values, values, axis=0)
+
+    return combined_values
 
 
-# Iterate over all categorys 
-def save_np_arrays(json_filename, category):
-    pass
+# Stack all players to 2d-array
+def stack_values(filename_list, property):
+    stacked_values = combine_values(filename_list, 0, property)
+    for i in range(1, 4):  # TODO: change to taken spots -> player name required
+        combined_values = combine_values(filename_list, i, property)
+        if np.count_nonzero(combined_values) > 0:  # TODO: change to taken spots -> player name required
+            stacked_values = np.vstack((stacked_values, combined_values))
+
+    # Clean-up
+    while(1):
+        cleanup_reference = np.sum(stacked_values, axis=0)
+        zero_indices = np.where(cleanup_reference == 0)
+        startpoint = np.amax(zero_indices) + 1  # startpoint of the last save
+        startpoint_value = cleanup_reference[startpoint]
+        possible_savepoints = np.where(cleanup_reference[:startpoint] >= startpoint_value)[0]  # find approximate save time
+        if possible_savepoints.size == 0:
+            break
+        savepoint = possible_savepoints[0]
+        stacked_values = np.delete(stacked_values, np.arange(savepoint, startpoint), axis=1)
+
+    return stacked_values
 
 
-def plot_stats_category(json_filename, category, intervall=None, n_xticks=None):
+def plot_stats_category(filename_list, category, intervall=None, n_xticks=None):
     fig, ax = plt.subplots() 
 
     # Plot curves
-    for i in range(2):  # TODO: Switch range to numpy array size
-        numbers = get_np_array(json_filename, i, category)
-        print('recorded values: ', numbers.size)
-        if np.any(numbers):  # TODO: Switch the check whether a spot is taken to the player name
-            if intervall:
-                ax.plot(numbers[intervall[0]:intervall[1]], label='Player'+str(i)) 
-            else:
-                ax.plot(numbers, label='Player'+str(i)) 
+    data = stack_values(filename_list, category)
+    for i in range(data.shape[0]):
+        y = data[i][:]
+        print(i, 'recorded values:', y.size, ', stat endvalue:', y[-1])
+        if intervall:  # TODO: automatically set interval depending on game tick
+            ax.plot(y[intervall[0]:intervall[1]], label='Player'+str(i))  # TODO: player name 
+        else:
+            ax.plot(y, label='Player'+str(i)) 
 
     # Formatting
     formatter = matplotlib.ticker.FuncFormatter(lambda datapoint, x: time.strftime('%H:%M', time.gmtime(datapoint / 1.3333)))
@@ -79,11 +99,14 @@ if __name__ == '__main__':
     filename = 'example/s3-2021-04-15-22-39-46.json'
     intervall=(350, 5250)
     n_xticks=7
-    plot_stats_category(filename, category='buildings', intervall=intervall, n_xticks=n_xticks)
-    plot_stats_category(filename, category='mana', intervall=intervall, n_xticks=n_xticks)
-    plot_stats_category(filename, category='soldiers', intervall=intervall, n_xticks=n_xticks)
-    plot_stats_category(filename, category='gold', intervall=intervall, n_xticks=n_xticks)
+    # plot_stats_category(filename, category='buildings', intervall=intervall, n_xticks=n_xticks)
+    # plot_stats_category(filename, category='mana', intervall=intervall, n_xticks=n_xticks)
+    # plot_stats_category(filename, category='soldiers', intervall=intervall, n_xticks=n_xticks)
+    # plot_stats_category(filename, category='gold', intervall=intervall, n_xticks=n_xticks)
 
     # Testrecording, random, 12 players
+    filename_list = ['example/s3-2021-03-22-21-12-33.json','example/s3-2021-03-22-22-25-51.json',
+                     'example/s3-2021-03-22-22-30-11.json','example/s3-2021-03-22-22-56-38.json']
+    plot_stats_category(filename_list, category='points')
 
     # stack_chart()
