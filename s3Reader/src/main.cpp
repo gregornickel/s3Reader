@@ -89,9 +89,9 @@ int main() {
 	DWORD initialFoodOffset = 0x3ACFD4;
 	DWORD initialMinesOffset = 0x3ACFD8;
 	DWORD initialGoldOffset = 0x3ACFDC;
-	DWORD initialManaOffset = 0x3ACFE0;
+	DWORD InitialMannaOffset = 0x3ACFE0;
 	DWORD initialSoldiersOffset = 0x3ACFE4;
-	DWORD initialFightsOffset = 0x3ACFE8;
+	DWORD initialBattlesOffset = 0x3ACFE8;
 
 	// get constant values 
 	DWORD numberOfPlayers = GetValue(processHandle, gameBaseAddress, offsetNumberOfPlayers);
@@ -145,18 +145,18 @@ int main() {
 			DWORD food = GetValue(processHandle, gameBaseAddress, initialFoodOffset + stats_offset);
 			DWORD mines = GetValue(processHandle, gameBaseAddress, initialMinesOffset + stats_offset);
 			DWORD gold = GetValue(processHandle, gameBaseAddress, initialGoldOffset + stats_offset);
-			DWORD mana = GetValue(processHandle, gameBaseAddress, initialManaOffset + stats_offset);
+			DWORD manna = GetValue(processHandle, gameBaseAddress, InitialMannaOffset + stats_offset);
 			DWORD soldiers = GetValue(processHandle, gameBaseAddress, initialSoldiersOffset + stats_offset);
-			DWORD fights = GetValue(processHandle, gameBaseAddress, initialFightsOffset + stats_offset);
-			DWORD points = settlers*2 + buildings + food + mines + gold*2 + mana + soldiers*2 + fights*5;
+			DWORD battles = GetValue(processHandle, gameBaseAddress, initialBattlesOffset + stats_offset);
+			DWORD score = settlers*2 + buildings + food + mines + gold*2 + manna + soldiers*2 + battles*5;
 
 			DWORD entries = j["stats"]["entries"];
-			// if (j["stats"]["entries"] > 0 && points < j["stats"][player]["points"][entries - 1]) {
+			// if (j["stats"]["entries"] > 0 && score < j["stats"][player]["score"][entries - 1]) {
 			// TODO: occasionally the values drop which should not happen and the recording stops, workaround: 
-			if (j["stats"]["entries"] > 0 && points < j["stats"][player]["points"][entries - 1] && points==0) {
+			if (j["stats"]["entries"] > 0 && score < j["stats"][player]["score"][entries - 1] && score==0) {
 				gameEnded = true;
 				std::cout << "\ndebug: break\n";
-				std::cout << "debug: " << player << ", entries: " << entries << ", points: " << j["stats"][player]["points"][entries - 1] << " (i-1), " << points << "(i)\n";
+				std::cout << "debug: " << player << ", entries: " << entries << ", score: " << j["stats"][player]["score"][entries - 1] << " (i-1), " << score << "(i)\n";
 				break;
 			}
 
@@ -167,10 +167,10 @@ int main() {
 			j["stats"][player]["food"].push_back(food);
 			j["stats"][player]["mines"].push_back(mines);
 			j["stats"][player]["gold"].push_back(gold);
-			j["stats"][player]["mana"].push_back(mana);
+			j["stats"][player]["manna"].push_back(manna);
 			j["stats"][player]["soldiers"].push_back(soldiers);
-			j["stats"][player]["fights"].push_back(fights);
-			j["stats"][player]["points"].push_back(points);
+			j["stats"][player]["battles"].push_back(battles);
+			j["stats"][player]["score"].push_back(score);
 		}
 
 		if (gameEnded) {
