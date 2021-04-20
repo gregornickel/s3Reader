@@ -45,7 +45,7 @@ Note:
 4. Call the build system to compile/link the project
 
     ```shell
-    $ cmake --build .
+    $ cmake --build . --config Release
     ```
 
 ## Plots
