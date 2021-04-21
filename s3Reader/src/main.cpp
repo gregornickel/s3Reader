@@ -12,39 +12,39 @@
 // for convenience
 using json = nlohmann::json;
 
-DWORD GetModuleBaseAddress(TCHAR* lpszModuleName, DWORD pID) {
-	DWORD dwModuleBaseAddress = 0;
-	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pID);  // make snapshot of all modules within process
-	MODULEENTRY32 ModuleEntry32 = { 0 };
-	ModuleEntry32.dwSize = sizeof(MODULEENTRY32);
+uintptr_t GetModuleBaseAddress(DWORD processId, TCHAR* moduleName) {
+	uintptr_t moduleBaseAddress = 0;
+	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId);  // snapshot of all modules within process
+	MODULEENTRY32 moduleEntry = { 0 };
+	moduleEntry.dwSize = sizeof(MODULEENTRY32);
 
-	if (Module32First(hSnapshot, &ModuleEntry32))  //store first Module in ModuleEntry32
+	if (Module32First(hSnapshot, &moduleEntry))  // store first module in moduleEntry
 	{
 		do {
-			if (_tcscmp(ModuleEntry32.szModule, lpszModuleName) == 0)  // if Found Module matches Module we look for -> done!
+			if (_tcscmp(moduleEntry.szModule, moduleName) == 0)  // search for the module we are looking for
 			{
-				dwModuleBaseAddress = (DWORD)ModuleEntry32.modBaseAddr;
+				moduleBaseAddress = (uintptr_t)moduleEntry.modBaseAddr;
 				break;
 			}
-		} while (Module32Next(hSnapshot, &ModuleEntry32));  // go through Module entries in Snapshot and store in ModuleEntry32
+		} while (Module32Next(hSnapshot, &moduleEntry));  // go through module entries in snapshot and store in moduleEntry
 	}
 	CloseHandle(hSnapshot);
 
-	return dwModuleBaseAddress;
+	return moduleBaseAddress;
 }
 
-DWORD GetValue(HANDLE& processHandle, DWORD gameBaseAddress, DWORD offset) {
-	DWORD value = NULL;
-	ReadProcessMemory(processHandle, (LPVOID)(gameBaseAddress + offset), &value, sizeof(value), NULL);
+int GetValue(HANDLE& processHandle, uintptr_t gameBaseAddress, unsigned int offset) {
+	uintptr_t value = NULL;
+	ReadProcessMemory(processHandle, (BYTE*)(gameBaseAddress + offset), &value, sizeof(value), NULL);
 
 	return value;
 }
 
-DWORD GetValue(HANDLE& processHandle, DWORD gameBaseAddress, std::vector<DWORD> offset) {
-	DWORD value = NULL;
-	ReadProcessMemory(processHandle, (LPVOID)(gameBaseAddress + offset.front()), &value, sizeof(value), NULL);
-	for (size_t i = 1; i < offset.size(); i++) {
-		ReadProcessMemory(processHandle, (LPVOID)(value + offset[i]), &value, sizeof(value), NULL);
+int GetValue(HANDLE& processHandle, uintptr_t gameBaseAddress, std::vector<unsigned int> offset) {
+	uintptr_t value = NULL;
+	ReadProcessMemory(processHandle, (BYTE*)(gameBaseAddress + offset.front()), &value, sizeof(value), NULL);
+	for (size_t i = 0; i < offset.size(); i++) {
+		ReadProcessMemory(processHandle, (BYTE*)(value + offset[i]), &value, sizeof(value), NULL);
 	}
 
 	return value;
@@ -54,45 +54,45 @@ DWORD GetValue(HANDLE& processHandle, DWORD gameBaseAddress, std::vector<DWORD> 
 int main() {
 	HWND hGameWindow = FindWindow(NULL, "S3");
 	if (hGameWindow == NULL) {
-		std::cout << "No game found, please start the game! \n";
+		std::cout << "no game found, please start the game\n";
 		std::cin.get();
 		return 0;
 	} 
 	else {
-		std::cout << "game found \n";
+		std::cout << "game found\n";
 	}
 
-	DWORD pID = NULL;  // ID of our Game
-	GetWindowThreadProcessId(hGameWindow, &pID);
+	DWORD processId = NULL;  // ID of our Game
+	GetWindowThreadProcessId(hGameWindow, &processId);
 	HANDLE processHandle = NULL;
-	processHandle = OpenProcess(PROCESS_VM_READ, FALSE, pID);
+	processHandle = OpenProcess(PROCESS_VM_READ, FALSE, processId);
 	if (processHandle == INVALID_HANDLE_VALUE || processHandle == NULL) {
-		std::cout << "failed to open process " << pID << " (pID) with processHandle " << processHandle << "\n";
+		std::cout << "failed to open process " << processId << " (processId) with processHandle " << processHandle << "\n";
 		std::cin.get();
 		return 0;
 	}
 	else {
-		std::cout << "processHandle found" << "\n";
+		std::cout << "processHandle found\n";
 	}
 
 	char gameName[] = "s3_alobby.exe";
-	DWORD gameBaseAddress = GetModuleBaseAddress(_T(gameName), pID);
+	uintptr_t gameBaseAddress = GetModuleBaseAddress(processId, _T(gameName));
 	std::cout << "gameBaseAddress = " << std::hex << gameBaseAddress << std::dec << "\n";
 
-	DWORD offsetTick = 0x3DFD48;
-	DWORD offsetNumberOfPlayers = 0x3ACFA4;
+	unsigned int offsetTick = 0x3DFD48;
+	unsigned int offsetNumberOfPlayers = 0x3ACFA4;
 
 	// initial stat offsets for player0, next player stats have an additional offset of +0x44 each
-	DWORD initialTeamOffset = 0x3ACFC0;
-	std::vector<DWORD> initialRaceAddress{ 0x3A7A78, 0x0064 };  // two level pointer 
-	DWORD initialSettlersOffset = 0x3ACFCC;
-	DWORD initialBuildingsOffset = 0x3ACFD0;
-	DWORD initialFoodOffset = 0x3ACFD4;
-	DWORD initialMinesOffset = 0x3ACFD8;
-	DWORD initialGoldOffset = 0x3ACFDC;
-	DWORD InitialMannaOffset = 0x3ACFE0;
-	DWORD initialSoldiersOffset = 0x3ACFE4;
-	DWORD initialBattlesOffset = 0x3ACFE8;
+	unsigned int initialTeamOffset = 0x3ACFC0;
+	std::vector<unsigned int> initialRaceAddress{ 0x3A7A78, 0x0064 };  // two level pointer 
+	unsigned int initialSettlersOffset = 0x3ACFCC;
+	unsigned int initialBuildingsOffset = 0x3ACFD0;
+	unsigned int initialFoodOffset = 0x3ACFD4;
+	unsigned int initialMinesOffset = 0x3ACFD8;
+	unsigned int initialGoldOffset = 0x3ACFDC;
+	unsigned int InitialMannaOffset = 0x3ACFE0;
+	unsigned int initialSoldiersOffset = 0x3ACFE4;
+	unsigned int initialBattlesOffset = 0x3ACFE8;
 
 	// using strftime to display date and time 
 	char dateBuffer[100];
@@ -126,14 +126,13 @@ int main() {
 	{
 		i++;
 
-		DWORD tick = GetValue(processHandle, gameBaseAddress, offsetTick);
-		std::cout << "tick:" << tick << "\n";
+		int tick = GetValue(processHandle, gameBaseAddress, offsetTick);
 
 		if (tick > 0) {
 			j["stats"]["tick"].push_back(tick);
 
 			// get constant values 
-			DWORD numberOfPlayers = GetValue(processHandle, gameBaseAddress, offsetNumberOfPlayers);
+			int numberOfPlayers = GetValue(processHandle, gameBaseAddress, offsetNumberOfPlayers);
 			j["general"]["numberOfPlayers"] = numberOfPlayers;
 			// TODO: player names
 
@@ -142,22 +141,22 @@ int main() {
 				std::string player = "player" + std::to_string(i);
 
 				// additional offsets between players
-				DWORD stats_offset = 0x44 * i;
-				std::vector<DWORD> race_offset = { initialRaceAddress[0], initialRaceAddress[1] + (DWORD)(0xCC * i) };
+				unsigned int stats_offset = 0x44 * i;
+				std::vector<unsigned int> race_offset = { initialRaceAddress[0], initialRaceAddress[1] + (unsigned int)(0xCC * i) };
 
-				DWORD team = GetValue(processHandle, gameBaseAddress, initialTeamOffset + stats_offset);
-				DWORD race = GetValue(processHandle, gameBaseAddress, race_offset);
-				DWORD settlers = GetValue(processHandle, gameBaseAddress, initialSettlersOffset + stats_offset);
-				DWORD buildings = GetValue(processHandle, gameBaseAddress, initialBuildingsOffset + stats_offset);
-				DWORD food = GetValue(processHandle, gameBaseAddress, initialFoodOffset + stats_offset);
-				DWORD mines = GetValue(processHandle, gameBaseAddress, initialMinesOffset + stats_offset);
-				DWORD gold = GetValue(processHandle, gameBaseAddress, initialGoldOffset + stats_offset);
-				DWORD manna = GetValue(processHandle, gameBaseAddress, InitialMannaOffset + stats_offset);
-				DWORD soldiers = GetValue(processHandle, gameBaseAddress, initialSoldiersOffset + stats_offset);
-				DWORD battles = GetValue(processHandle, gameBaseAddress, initialBattlesOffset + stats_offset);
-				DWORD score = settlers*2 + buildings + food + mines + gold*2 + manna + soldiers*2 + battles*5;
+				int team = GetValue(processHandle, gameBaseAddress, initialTeamOffset + stats_offset);
+				int race = GetValue(processHandle, gameBaseAddress, race_offset);
+		 		int settlers = GetValue(processHandle, gameBaseAddress, initialSettlersOffset);
+				int buildings = GetValue(processHandle, gameBaseAddress, initialBuildingsOffset + stats_offset);
+				int food = GetValue(processHandle, gameBaseAddress, initialFoodOffset + stats_offset);
+				int mines = GetValue(processHandle, gameBaseAddress, initialMinesOffset + stats_offset);
+				int gold = GetValue(processHandle, gameBaseAddress, initialGoldOffset + stats_offset);
+				int manna = GetValue(processHandle, gameBaseAddress, InitialMannaOffset + stats_offset);
+				int soldiers = GetValue(processHandle, gameBaseAddress, initialSoldiersOffset + stats_offset);
+				int battles = GetValue(processHandle, gameBaseAddress, initialBattlesOffset + stats_offset);
+				int score = settlers*2 + buildings + food + mines + gold*2 + manna + soldiers*2 + battles*5;
 
-				DWORD entries = j["stats"]["entries"];
+				int entries = j["stats"]["entries"];
 				// if (j["stats"]["entries"] > 0 && score < j["stats"][player]["score"][entries - 1]) {
 				// TODO: occasionally the values drop which should not happen and the recording stops, workaround: 
 				if (j["stats"]["entries"] > 0 && score < j["stats"][player]["score"][entries - 1] && score==0) {
@@ -190,7 +189,7 @@ int main() {
 			std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
 			auto int_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 
-			std::cout << "\r(" << i << ") " << std::fixed << std::setprecision(1) << fp_ms.count() << " ms since start, memory readout successful!";
+			std::cout << "\r(" << i << ") " << std::fixed << std::setprecision(1) << fp_ms.count() << " ms since start, tick " << tick << ", memory readout successful!";
 
 			j["stats"]["time"].push_back(int_ms.count());
 			j["stats"]["entries"] = (int)j["stats"]["entries"] + 1;
