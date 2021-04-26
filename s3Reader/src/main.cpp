@@ -43,7 +43,7 @@ int GetValue(HANDLE& processHandle, uintptr_t gameBaseAddress, unsigned int offs
 int GetValue(HANDLE& processHandle, uintptr_t gameBaseAddress, std::vector<unsigned int> offset) {
 	uintptr_t value = NULL;
 	ReadProcessMemory(processHandle, (BYTE*)(gameBaseAddress + offset.front()), &value, sizeof(value), NULL);
-	for (size_t i = 0; i < offset.size(); i++) {
+	for (size_t i = 1; i < offset.size(); i++) {
 		ReadProcessMemory(processHandle, (BYTE*)(value + offset[i]), &value, sizeof(value), NULL);
 	}
 
@@ -120,7 +120,6 @@ int main() {
 	};
 
 	int i = 0;
-	bool gameEnded = false;
 
 	while (i < 28800)  // loop while recording stats (about 4h)
 	{
@@ -146,7 +145,7 @@ int main() {
 
 				int team = GetValue(processHandle, gameBaseAddress, initialTeamOffset + stats_offset);
 				int race = GetValue(processHandle, gameBaseAddress, race_offset);
-		 		int settlers = GetValue(processHandle, gameBaseAddress, initialSettlersOffset);
+				int settlers = GetValue(processHandle, gameBaseAddress, initialSettlersOffset + stats_offset);
 				int buildings = GetValue(processHandle, gameBaseAddress, initialBuildingsOffset + stats_offset);
 				int food = GetValue(processHandle, gameBaseAddress, initialFoodOffset + stats_offset);
 				int mines = GetValue(processHandle, gameBaseAddress, initialMinesOffset + stats_offset);
@@ -155,16 +154,6 @@ int main() {
 				int soldiers = GetValue(processHandle, gameBaseAddress, initialSoldiersOffset + stats_offset);
 				int battles = GetValue(processHandle, gameBaseAddress, initialBattlesOffset + stats_offset);
 				int score = settlers*2 + buildings + food + mines + gold*2 + manna + soldiers*2 + battles*5;
-
-				int entries = j["stats"]["entries"];
-				// if (j["stats"]["entries"] > 0 && score < j["stats"][player]["score"][entries - 1]) {
-				// TODO: occasionally the values drop which should not happen and the recording stops, workaround: 
-				if (j["stats"]["entries"] > 0 && score < j["stats"][player]["score"][entries - 1] && score==0) {
-					gameEnded = true;
-					std::cout << "\ndebug: break\n";
-					std::cout << "debug: " << player << ", entries: " << entries << ", score: " << j["stats"][player]["score"][entries - 1] << " (i-1), " << score << "(i)\n";
-					break;
-				}
 
 				j["stats"][player]["team"] = team;
 				j["stats"][player]["race"] = race;
@@ -179,10 +168,13 @@ int main() {
 				j["stats"][player]["score"].push_back(score);
 			}
 
-			if (gameEnded) {
-				std::cout << "recording ended" << std::endl;
-				std::cin.get();
-				break;
+			// end recording if tick is not increasing for over 30 seconds 
+			if (j["stats"]["entries"] > 60) {
+				if (j["stats"]["tick"][(int)j["stats"]["entries"] - 60] == tick) {
+					std::cout << "\nrecording ended" << std::endl;
+					std::cin.get();
+					break;
+				}
 			}
 
 			auto t2 = std::chrono::high_resolution_clock::now();
