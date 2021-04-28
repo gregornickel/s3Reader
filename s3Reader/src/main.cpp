@@ -44,7 +44,7 @@ int GetValue(HANDLE& processHandle, uintptr_t gameBaseAddress, std::vector<unsig
 	uintptr_t value = NULL;
 	ReadProcessMemory(processHandle, (BYTE*)(gameBaseAddress + offset.front()), &value, sizeof(value), NULL);
 	for (size_t i = 1; i < offset.size(); i++) {
-		ReadProcessMemory(processHandle, (BYTE*)(value + offset[i]), &value, sizeof(value), NULL);
+		ReadProcessMemory(processHandle, (BYTE*)((int)value + offset[i]), &value, sizeof(value), NULL);
 	}
 
 	return value;
@@ -120,6 +120,7 @@ int main() {
 	};
 
 	int i = 0;
+	bool gameEnded = false;
 
 	while (i < 28800)  // loop while recording stats (about 4h)
 	{
@@ -149,7 +150,7 @@ int main() {
 				int buildings = GetValue(processHandle, gameBaseAddress, initialBuildingsOffset + stats_offset);
 				int food = GetValue(processHandle, gameBaseAddress, initialFoodOffset + stats_offset);
 				int mines = GetValue(processHandle, gameBaseAddress, initialMinesOffset + stats_offset);
-				int gold = GetValue(processHandle, gameBaseAddress, initialGoldOffset + stats_offset);
+				int gold = GetValue(processHandle, gameBaseAddress, initialGoldOffset + stats_offset) / 2;
 				int manna = GetValue(processHandle, gameBaseAddress, InitialMannaOffset + stats_offset);
 				int soldiers = GetValue(processHandle, gameBaseAddress, initialSoldiersOffset + stats_offset);
 				int battles = GetValue(processHandle, gameBaseAddress, initialBattlesOffset + stats_offset);
@@ -166,11 +167,15 @@ int main() {
 				j["stats"][player]["soldiers"].push_back(soldiers);
 				j["stats"][player]["battles"].push_back(battles);
 				j["stats"][player]["score"].push_back(score);
+
+				if (gold < j["stats"][player]["gold"][(int)j["stats"][player]["gold"] - 1]) {
+					gameEnded = 1;
+				}
 			}
 
 			// end recording if tick is not increasing for over 30 seconds 
 			if (j["stats"]["entries"] > 60) {
-				if (j["stats"]["tick"][(int)j["stats"]["entries"] - 60] == tick) {
+				if (gameEnded || j["stats"]["tick"][(int)j["stats"]["entries"] - 60] == tick) {
 					std::cout << "\nrecording ended" << std::endl;
 					std::cin.get();
 					break;
