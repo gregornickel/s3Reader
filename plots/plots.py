@@ -57,8 +57,8 @@ def stack_values(filename_list, property):
     stacked_values = combine_values(filename_list, 0, property)
     for i in range(1, 4):  # TODO: change to taken spots -> player name required
         combined_values = combine_values(filename_list, i, property)
-        if np.count_nonzero(combined_values) > 0 or i <= 1:  # TODO: change to taken spots -> player name required
-            stacked_values = np.vstack((stacked_values, combined_values))
+        # TODO: only stack taken spots -> player name required
+        stacked_values = np.vstack((stacked_values, combined_values))
 
     # clean-up
     # while(1):
@@ -155,10 +155,67 @@ def stack_chart(filename_list):
     plt.show()
 
 
+def team_chart(filename_list):
+    bars = ["Gems", "Gold", "Battles", "Soldiers"]
+    soldiers = stack_values(filename_list, property='soldiers')
+    battles = stack_values(filename_list, property='battles')
+    gold = stack_values(filename_list, property='gold')
+    soldiers_0 = 0
+    soldiers_1 = 0
+    battles_0 = 0
+    battles_1 = 0
+    gold_0 = 0
+    gold_1 = 0
+    gems_0 = 0
+    gems_1 = 0
+    for i in range(soldiers.shape[0]):
+        team = get_player_values(filename_list[0], player_number=i, property='team')
+        race = get_player_values(filename_list[0], player_number=i, property='race')
+        if team == 0:
+            soldiers_0 += soldiers[i][-1]
+            battles_0 += battles[i][-1]
+            if race == 1:
+                gems_0 += gold[i][-1]
+            else:
+                gold_0 += gold[i][-1]
+        if team == 1:
+            soldiers_1 += soldiers[i][-1]
+            battles_1 += battles[i][-1]
+            if race == 1:
+                gems_1 += gold[i][-1]
+            else:
+                gold_1 += gold[i][-1]
+
+    x_0 = np.array([gems_0, gold_0, battles_0, soldiers_0])
+    x_1 = np.array([gems_1, gold_1, battles_1, soldiers_1])
+    y = np.arange(x_0.size)
+    maximum = np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(soldiers_0, soldiers_1), battles_0), battles_1), gold_0), gold_1), gems_0), gems_1)
+
+    # plot curves
+    fig, ax = plt.subplots(ncols=2, sharey=True)
+    ax[0].barh(y, x_0, align='center', zorder=10)
+    ax[1].barh(y, x_1, align='center', color=plt.rcParams["axes.prop_cycle"].by_key()["color"][1], zorder=10)
+
+    # formatting
+    ax[0].set(title='Team 1')
+    ax[0].set(yticks=y, yticklabels=bars)
+    ax[0].yaxis.tick_left()
+    ax[0].axis(xmin=maximum*1.05, xmax=0) 
+    ax[1].set(title='Team 2')
+    ax[1].tick_params(axis='y', which='both', left=False)
+    ax[1].axis(xmin=0, xmax=maximum*1.05)
+    # fig.tight_layout()
+    fig.subplots_adjust(wspace=0)
+
+    plt.show()
+
+
 if __name__ == '__main__':
     # testrecording
     filename_list = ['example/s3-2021-04-26-02-46-37.json']
     # plot_stats(filename_list, property='buildings')
     # plot_stats(filename_list, property='soldiers')
 
-    stack_chart(filename_list)
+    # stack_chart(filename_list)
+
+    team_chart(filename_list)
