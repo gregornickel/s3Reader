@@ -168,8 +168,10 @@ int main() {
 				j["stats"][player]["battles"].push_back(battles);
 				j["stats"][player]["score"].push_back(score);
 
-				if (gold < j["stats"][player]["gold"][(int)j["stats"][player]["gold"] - 1]) {
-					gameEnded = 1;
+				if ((int)j["stats"]["entries"] > 1) {
+					if (gold < j["stats"][player]["gold"][(int)j["stats"]["entries"] - 1]) {
+						gameEnded = 1;
+					}
 				}
 			}
 
