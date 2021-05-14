@@ -118,6 +118,7 @@ int main() {
 			{"entries", 0}
 		}}
 	};
+	json jOverlay = j;
 
 	int i = 0;
 	bool gameEnded = false;
@@ -130,10 +131,12 @@ int main() {
 
 		if (tick > 0) {
 			j["stats"]["tick"].push_back(tick);
+			jOverlay["stats"]["tick"] = tick;
 
 			// get constant values 
 			int numberOfPlayers = GetValue(processHandle, gameBaseAddress, offsetNumberOfPlayers);
 			j["general"]["numberOfPlayers"] = numberOfPlayers;
+			jOverlay["general"]["numberOfPlayers"] = numberOfPlayers;
 			// TODO: player names
 
 			for (size_t i = 0; i < 20; i++)  // iterate over all 20 player slots
@@ -156,6 +159,7 @@ int main() {
 				int battles = GetValue(processHandle, gameBaseAddress, initialBattlesOffset + stats_offset);
 				int score = settlers*2 + buildings + food + mines + gold*2 + manna + soldiers*2 + battles*5;
 
+				j["stats"][player]["name"] = "";
 				j["stats"][player]["team"] = team;
 				j["stats"][player]["race"] = race;
 				j["stats"][player]["settlers"].push_back(settlers);
@@ -167,6 +171,19 @@ int main() {
 				j["stats"][player]["soldiers"].push_back(soldiers);
 				j["stats"][player]["battles"].push_back(battles);
 				j["stats"][player]["score"].push_back(score);
+
+				jOverlay["stats"][player]["name"] = "";
+				jOverlay["stats"][player]["team"] = team;
+				jOverlay["stats"][player]["race"] = race;
+				jOverlay["stats"][player]["settlers"] = settlers;
+				jOverlay["stats"][player]["buildings"] = buildings;
+				jOverlay["stats"][player]["food"] = food;
+				jOverlay["stats"][player]["mines"] = mines;
+				jOverlay["stats"][player]["gold"] = gold;
+				jOverlay["stats"][player]["manna"] = manna;
+				jOverlay["stats"][player]["soldiers"] = soldiers;
+				jOverlay["stats"][player]["battles"] = battles;
+				jOverlay["stats"][player]["score"] = score;
 
 				if ((int)j["stats"]["entries"] > 1) {
 					if (gold < j["stats"][player]["gold"][(int)j["stats"]["entries"] - 1]) {
@@ -192,10 +209,16 @@ int main() {
 
 			j["stats"]["time"].push_back(int_ms.count());
 			j["stats"]["entries"] = (int)j["stats"]["entries"] + 1;
+			jOverlay["general"]["gameEnded"] = gameEnded;
+
+			// TODO: check and create 'Stats' folder if it doesn't exist
 
 			// write JSON to file
-			std::ofstream o("s3-" + std::string(dateBuffer) + "-" + std::string(timeBuffer) + ".json");
+			std::ofstream o("Stats/" + std::string(dateBuffer) + "_" + std::string(timeBuffer) + ".json");
 			o << std::setw(4) << j << std::endl;
+
+			std::ofstream oo("Stats/overlay-data.json");
+			oo << std::setw(4) << jOverlay << std::endl;
 		}
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));

@@ -1,5 +1,6 @@
 .vscode
 workspace.code-workspace
+*.psd
 
 # Build directories
 s3Reader/build/
@@ -8,6 +9,9 @@ s3Reader/build-release/
 
 # Exclude directories
 plots/example
+
+# Dependency directories
+node_modules/
 
 # macOS
 .DS_Store

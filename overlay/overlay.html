@@ -1,0 +1,283 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Settlers 3 - Twitch Overlay</title>
+        <link rel="icon" type="image/png" href="images/favicon.png"/>
+        <link rel="stylesheet" href="style.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <script>
+                'use strict';
+
+                const ws = new WebSocket('ws://localhost:8082');
+
+                ws.addEventListener('open', e => {
+                    console.log('Connection to the server established!');
+                });
+
+                ws.addEventListener('message', e => {
+                    updateOverlay(JSON.parse(e.data));
+                });
+
+                function updateOverlay(data) {
+                    // hardcode player names 
+                    data.stats['player0'].name = 'Player0';
+                    data.stats['player1'].name = 'Player1';
+                    // data.stats['player2'].name = 'Player2';
+                    // data.stats['player3'].name = 'Player3';
+                    // data.stats['player4'].name = 'Player4';
+                    // data.stats['player5'].name = 'Player5';
+                    // data.stats['player6'].name = 'Player6';
+                    // data.stats['player7'].name = 'Player7';
+                    // data.stats['player8'].name = 'Player8';
+                    // data.stats['player9'].name = 'Player9';
+                    // data.stats['player10'].name = 'Player10';
+                    // data.stats['player11'].name = 'Player11';
+                    // data.stats['player12'].name = 'Player12';
+                    // data.stats['player13'].name = 'Player13';
+
+                    // console.log(data);
+
+                    // write stats value in the corresponding html tag
+                    function updateStatsItem(playerNumber, type) {
+                        var statsItem = data.stats['player' + playerNumber][type];
+                        document.getElementById('player' + playerNumber + '-' + type).innerHTML = statsItem;
+                        return
+                    }
+
+                    function updateStats(playerNumber) {
+                        updateStatsItem(playerNumber, 'settlers');
+                        updateStatsItem(playerNumber, 'buildings');
+                        updateStatsItem(playerNumber, 'food');
+                        updateStatsItem(playerNumber, 'mines');
+                        updateStatsItem(playerNumber, 'gold');
+                        updateStatsItem(playerNumber, 'manna');
+                        updateStatsItem(playerNumber, 'soldiers');
+                        updateStatsItem(playerNumber, 'battles');
+                        return
+                    }
+
+                    // return appropriate css tag for each race code
+                    function returnRace(raceCode) {
+                        switch(raceCode) {
+                            case 0:
+                                return 'roman';
+                                break;
+                            case 1:
+                                return 'egypt';
+                                break;
+                            case 2:
+                                return 'asian';
+                                break;
+                            case 3:
+                                return 'amazon';
+                                break;
+                            case 255:
+                                return 'random';
+                                break;
+                            default:
+                                return 0;
+                            }
+                    }
+
+                    // ##########################################################################
+                    // # 1v1 Overlay                                                            #
+                    // ##########################################################################
+
+                    // update values for settler, buildings, food, mines, gold, and manna 
+                    updateStats(0);  // player 1 (red)
+                    updateStats(1);  // player 2 (blue)
+
+                    // player names
+                    if (document.getElementById('player0-name').innerHTML != '') {
+                        data.stats['player0'].name = document.getElementById('player0-name').innerHTML;
+                    } else {
+                        document.getElementById('player0-name').innerHTML = data.stats.player0.name;
+                    }
+                    if (document.getElementById('player1-name').innerHTML != '') {
+                        data.stats['player1'].name = document.getElementById('player1-name').innerHTML;
+                    } else {
+                        document.getElementById('player1-name').innerHTML = data.stats.player1.name;
+                    }
+
+                    // race icon
+                    var player0_race = returnRace(data.stats.player0.race);
+                    document.getElementById('player0-race').classList.add(player0_race);
+                    var player1_race = returnRace(data.stats.player1.race);
+                    document.getElementById('player1-race').classList.add(player1_race);
+
+                    // bar visualization for soldiers and battles 
+                    var player0_soldiers = data.stats.player0.soldiers;
+                    var player1_soldiers = data.stats.player1.soldiers;
+                    if (player0_soldiers + player1_soldiers > 0) {
+                        var barWidth = Math.round((player0_soldiers / (player0_soldiers + player1_soldiers)) * 100);
+                        $('#soldiers-bar-red').css({'width' : barWidth});
+                    }
+                    var player0_battles = data.stats.player0.battles;
+                    var player1_battles = data.stats.player1.battles;
+                    if (player0_battles + player1_battles > 0) {
+                        var barWidth = Math.round((player0_battles / (player0_battles + player1_battles)) * 100);
+                        $('#battles-bar-red').css({'width' : barWidth});
+                    }
+
+                    // ##########################################################################
+                    // # Score board (lower right)                                              #
+                    // ##########################################################################
+
+                    // create teams array with team score and player array for each team
+                    var teams = [];
+                    var players = [];
+                    var team = new Object()
+                    var teamId = 0;
+                    var teamScore = 0;
+
+                    for (var i = 0; i < 20; i++) {
+                        if (data.stats['player' + i].name !== '' && data.stats['player' + i].team == teamId) {
+                            teamScore = teamScore + data.stats['player' + i].score;
+                            var player = {
+                                id: i,
+                                name: data.stats['player' + i].name,
+                                race: data.stats['player' + i].race,
+                                score: data.stats['player' + i].score
+                            };
+                            players.push(player);
+                        } else if (data.stats['player' + i].name !== '') {
+                            players.sort((a, b) => b.score - a.score);
+                            team.players = players;
+                            team.teamScore = teamScore;
+                            teams.push(team);
+
+                            teamId = data.stats['player' + i].team;
+                            var team = new Object()
+                            var players = [];
+                            var teamScore = 0;
+                            i--;
+                        }
+                    }
+                    if (teamId >= 0) {
+                        players.sort((a, b) => b.score - a.score);
+                        team.players = players;
+                        team.teamScore = teamScore;
+                        teams.push(team);
+                    }
+                    teams.sort((a, b) => b.teamScore - a.teamScore);
+                    
+                    // update score board
+                    for (var i = 0; i < teams.length; i++) { 
+                        var teamScore = Math.ceil(teams[i].teamScore / teams[i].players.length);
+
+                        for (var j = 0; j < teams[i].players.length; j++) { 
+                            var id = 'player' + teams[i].players[j].id;
+                            document.getElementById(id).innerHTML = teams[i].players[j].name + ': ' + teams[i].players[j].score + '/' + teamScore;
+
+                            // add race icons for score 
+                            document.getElementById(id).classList.add('race');
+                            document.getElementById(id).classList.add(returnRace(teams[i].players[j].race));
+
+                            // line-through for players who have lost the game 
+                            if (data.stats[id].lost) {
+                                document.getElementById(id).classList.add('lost');
+                            }
+
+                            // get players in the proper order 
+                            if (i > 0 || j > 0) {
+                                $('#player' + teams[i].players[j].id).insertAfter('#player' + previousId);
+                            }
+                            var previousId = teams[i].players[j].id;
+                        }
+                    }
+                }
+            </script>
+
+            <!-- <img src="images/s3-placeholder1.png" alt="Video"> -->
+
+            <div id="overlay">
+                <div class="stats-item" id="si11">
+                    <div class="stats-item-text">Settlers</div>
+                    <div class="stats-item-number" id="player0-settlers">0</div>
+                </div>
+                <div class="stats-item" id="si12">
+                    <div class="stats-item-text">Buildings</div>
+                    <div class="stats-item-number" id="player0-buildings">0</div>
+                </div>
+                <div class="stats-item" id="si13">
+                    <div class="stats-item-text">Food</div>
+                    <div class="stats-item-number" id="player0-food">0</div>
+                </div>
+                <div class="stats-item" id="si14">
+                    <div class="stats-item-text">Mines</div>
+                    <div class="stats-item-number" id="player0-mines">0</div>
+                </div>
+                <div class="stats-item" id="si15">
+                    <div class="stats-item-text">Gold</div>
+                    <div class="stats-item-number" id="player0-gold">0</div>
+                </div>
+                <div class="stats-item" id="si16">
+                    <div class="stats-item-text">Manna</div>
+                    <div class="stats-item-number" id="player0-manna">0</div>
+                </div>
+
+                <div class="middle" id="player0-name" contenteditable="true"></div>
+                <div class="middle" id="vs" contenteditable="true">vs</div>
+                <div class="middle" id="player1-name" contenteditable="true"></div>
+
+                <div class="middle" id="player0-soldiers">0</div>
+                <div class="middle" id="player1-soldiers">0</div>
+                <div class="middle" id="player0-battles">0</div>
+                <div class="middle" id="player1-battles">0</div>
+
+                <div class="middle" id="player0-race"></div>
+                <div class="middle" id="player1-race"></div>
+                <div class="middle" id="soldiers-bar-blue"></div>
+                <div class="middle" id="soldiers-bar-red"></div>
+                <div class="middle" id="battles-bar-blue"></div>
+                <div class="middle" id="battles-bar-red"></div>
+
+                <div class="stats-item" id="si21">
+                    <div class="stats-item-text">Settlers</div>
+                    <div class="stats-item-number" id="player1-settlers">0</div>
+                </div>
+                <div class="stats-item" id="si22">
+                    <div class="stats-item-text">Buildings</div>
+                    <div class="stats-item-number" id="player1-buildings">0</div>
+                </div>
+                <div class="stats-item" id="si23">
+                    <div class="stats-item-text">Food</div>
+                    <div class="stats-item-number" id="player1-food">0</div>
+                </div>
+                <div class="stats-item" id="si24">
+                    <div class="stats-item-text">Mines</div>
+                    <div class="stats-item-number" id="player1-mines">0</div>
+                </div>
+                <div class="stats-item" id="si25">
+                    <div class="stats-item-text">Gold</div>
+                    <div class="stats-item-number" id="player1-gold">0</div>
+                </div>
+                <div class="stats-item" id="si26">
+                    <div class="stats-item-text">Manna</div>
+                    <div class="stats-item-number" id="player1-manna">0</div>
+                </div>
+            </div>
+            
+            <div id="score" class="box">
+                <div class="score-item" id="player0"></div>
+                <div class="score-item" id="player1"></div>
+                <div class="score-item" id="player2"></div>
+                <div class="score-item" id="player3"></div>
+                <div class="score-item" id="player4"></div>
+                <div class="score-item" id="player5"></div>
+                <div class="score-item" id="player6"></div>
+                <div class="score-item" id="player7"></div>
+                <div class="score-item" id="player8"></div>
+                <div class="score-item" id="player9"></div>
+                <div class="score-item" id="player10"></div>
+                <div class="score-item" id="player11"></div>
+                <div class="score-item" id="player12"></div>
+                <div class="score-item" id="player13"></div>
+            </div>
+        </div>
+    </body>
+</html>

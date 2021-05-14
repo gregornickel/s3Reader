@@ -1,0 +1,343 @@
+/* ##########################################################################
+   # Page setup                                                             #
+   ########################################################################## */
+
+body {
+    font-family: Helvetica, Arial, sans-serif
+}
+
+.container {
+    position: relative;
+    width: 1366px;
+    height: 768px;
+    padding: 0px;
+    margin: 0px;
+}
+
+
+/* ##########################################################################
+   # Twitch player                                                          #
+   ########################################################################## */
+   
+#player-1 {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 1366px;
+    height: 768px;
+    border: 3px solid red;  /* delete -> just to test switching players is working */
+    z-index: 10;
+}
+
+#player-2 {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 1366px;
+    height: 768px;
+    border: 3px solid green;  /* delete -> just to test switching players is working */
+    z-index: 1;
+}
+
+
+/* ##########################################################################
+   # 1v1 Overlay                                                            #
+   ########################################################################## */
+   
+#overlay {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 1366px;
+    height: 120px;
+    background-image: url('images/1v1-overlay.png');
+    background-position: top;
+    background-repeat: no-repeat;
+    background-size: 1366px 120px;
+    color: white;
+    padding: 0px;
+    z-index: 1000;
+}
+
+
+/* ##########################################################################
+   # 1v1 stats                                                              #
+   ########################################################################## */
+
+.stats-item {
+    position: absolute;
+    top: 0px;
+    width: 60px;
+    height: 45px;
+    text-align: right;
+    /* border: 1px solid green */
+}
+
+.stats-item-text {
+    font-size: 11px;
+    font-weight: 100;
+    padding: 6px 8px 0px 8px;
+}
+
+.stats-item-number {
+    font-size: 14px;
+    font-weight: 100;
+    padding: 11px 8px 0px 8px;
+}
+
+#si11 { left: 314px; }
+#si12 { left: 374px; }
+#si13 { left: 434px; }
+#si14 { left: 494px; }
+#si15 { left: 554px; }
+#si16 { left: 614px; }
+#si21 { left: 1006px; }
+#si22 { left: 1066px; }
+#si23 { left: 1126px; }
+#si24 { left: 1186px; }
+#si25 { left: 1246px; }
+#si26 { left: 1306px; }
+
+
+/* ##########################################################################
+   # 1v1 middle section                                                     #
+   ########################################################################## */
+
+.middle {
+    position: absolute;
+    top: 12px;
+    font-weight: 600;
+}
+
+#vs {
+    text-align: center;
+    width: 50px;
+    left: 815px;
+}
+
+#player0-name {
+    text-align: right;
+    width: 120px;
+    left: 690px;
+}
+
+#player1-name {
+    text-align: left;
+    width: 120px;
+    left: 870px;
+}
+
+#player0-soldiers {
+    text-align: right;
+    left: 744px;
+    top: 57px;
+    width: 40px;
+    font-size: 14px;
+    font-weight: 100;
+}
+
+#player1-soldiers {
+    text-align: left;
+    left: 900px;
+    top: 57px;
+    width: 40px;
+    font-size: 14px;
+    font-weight: 100;
+}
+
+#player0-battles {
+    text-align: right;
+    left: 744px;
+    top: 77px;
+    width: 40px;
+    font-size: 14px;
+    font-weight: 100;
+}
+
+#player1-battles {
+    text-align: left;
+    left: 900px;
+    top: 77px;
+    width: 40px;
+    font-size: 14px;
+    font-weight: 100;
+}
+
+#player0-race {
+    width: 25px;
+    height: 25px;
+    left: 695px;
+    top: 63px;
+    background-position: right;
+    background-repeat: no-repeat;
+    background-size: 25px 25px;
+} 
+
+#player1-race {
+    width: 25px;
+    height: 25px;
+    left: 960px;
+    top: 63px;
+    background-position: right;
+    background-repeat: no-repeat;
+    background-size: 25px 25px;
+} 
+
+
+/* ##########################################################################
+   # 1v1 bar visualization                                                  #
+   ########################################################################## */
+
+#soldiers-bar-blue {
+    width: 102px;
+    height: 8px;
+    left: 789px;
+    top: 60px;
+    background-color: #55AAFF;
+    border: 1px solid black;
+}
+
+#soldiers-bar-red {
+    width: 50px;  /* px number corresponds exactly to the percentage */
+    height: 8px;
+    left: 790px;
+    top: 61px;
+    background-color: #FF5555;
+    border-right: 1px solid black;
+}
+
+#battles-bar-blue {
+    width: 102px;
+    height: 8px;
+    left: 789px;
+    top: 80px;
+    background-color: #55AAFF;
+    border: 1px solid black;
+}
+
+#battles-bar-red {
+    width: 50px;  /* px number corresponds exactly to the percentage */
+    height: 8px;
+    left: 790px;
+    top: 81px;
+    background-color: #FF5555;
+    border-right: 1px solid black;
+}
+
+
+/* ##########################################################################
+   # Score board (lower right)                                              #
+   ########################################################################## */
+
+#score {
+    position: absolute;
+    right: 0px;
+    bottom: 30px;
+    display: flow-root;
+    text-align: right;
+    color: white;
+    margin: 0;
+    padding: 0 2px 0 2px;
+    z-index: 1000;
+}
+
+.box {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #CACACA;
+}
+
+.score-item {
+    flow: right;
+    margin: 5px;
+    font-size: 15px;
+    text-shadow: #000 0px 0px 1px, #000 0px 0px 1px, #000 0px 0px 1px, #000 0px 0px 1px,
+                 #000 0px 0px 1px, #000 0px 0px 1px, #000 0px 0px 1px, #000 0px 0px 1px;
+    -webkit-font-smoothing: antialiased;
+}
+
+#player0 {
+    color: #FF1C00;  /* original s3 color */
+    color: #FF5555;
+}
+
+#player1 {
+    color: #1896FF;  /* original s3 color */
+    color: #55AAFF;
+}
+
+#player2 {
+    color: #FFFF00;  /* original s3 color */
+    color: #FFFF55;
+}
+
+#player3 {
+    color: #31BE5A;  /* original s3 color */
+    color: #55FF55;
+}
+
+#player4 {
+    color: #FF9600;  /* original s3 color */
+    color: #FFAA55;
+}
+
+#player5 {
+    color: #00FFFF;  /* original s3 color */
+    color: #55FFFF;
+}
+
+#player6 {
+    color: #FF00FF;  /* original s3 color */
+    color: #FF55FF;
+}
+
+#player7 {
+    color: #313031;  /* original s3 color */
+    color: #444444;
+}
+
+#player8 {
+    color: #FFFFFF;  /* original s3 color */
+    color: #F0F0F0;
+}
+
+#player9 {
+    color: #081CFF;  /* original s3 color */
+    color: #4141FF;
+}
+
+#player10 {
+    color: #DE5518;  /* original s3 color */
+    color: #CC5500;
+}
+
+#player11 {
+    color: #949694;  /* original s3 color */
+    color: #909090;
+}
+
+#player12 {
+    color: #BD10EF;  /* original s3 color */
+    color: #AA00E1;
+}
+
+#player13 {
+    color: #007900;  /* original s3 color */
+    color: #008000;
+}
+
+.race{
+    background-position: right;
+    background-repeat: no-repeat;
+    background-size: 15px 15px;
+    padding-right: 22px;
+} 
+
+.roman{ background-image: url('images/roman.png'); } 
+.egypt{ background-image: url('images/egypt.png'); } 
+.asian{ background-image: url('images/asian.png'); } 
+.amazon{ background-image: url('images/amazon.png'); } 
+.random{ background-image: url('images/random.png'); } 
+
+.lost {
+    text-decoration-line: line-through;
+}
