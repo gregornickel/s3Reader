@@ -23,29 +23,13 @@
                 });
 
                 function updateOverlay(data) {
-                    // hardcode player names 
-                    data.stats['player0'].name = 'Player0';
-                    data.stats['player1'].name = 'Player1';
-                    // data.stats['player2'].name = 'Player2';
-                    // data.stats['player3'].name = 'Player3';
-                    // data.stats['player4'].name = 'Player4';
-                    // data.stats['player5'].name = 'Player5';
-                    // data.stats['player6'].name = 'Player6';
-                    // data.stats['player7'].name = 'Player7';
-                    // data.stats['player8'].name = 'Player8';
-                    // data.stats['player9'].name = 'Player9';
-                    // data.stats['player10'].name = 'Player10';
-                    // data.stats['player11'].name = 'Player11';
-                    // data.stats['player12'].name = 'Player12';
-                    // data.stats['player13'].name = 'Player13';
-
                     // console.log(data);
 
                     // write stats value in the corresponding html tag
                     function updateStatsItem(playerNumber, type) {
                         var statsItem = data.stats['player' + playerNumber][type];
                         document.getElementById('player' + playerNumber + '-' + type).innerHTML = statsItem;
-                        return
+                        return;
                     }
 
                     function updateStats(playerNumber) {
@@ -57,7 +41,7 @@
                         updateStatsItem(playerNumber, 'manna');
                         updateStatsItem(playerNumber, 'soldiers');
                         updateStatsItem(playerNumber, 'battles');
-                        return
+                        return;
                     }
 
                     // return appropriate css tag for each race code
@@ -92,16 +76,8 @@
                     updateStats(1);  // player 2 (blue)
 
                     // player names
-                    if (document.getElementById('player0-name').innerHTML != '') {
-                        data.stats['player0'].name = document.getElementById('player0-name').innerHTML;
-                    } else {
-                        document.getElementById('player0-name').innerHTML = data.stats.player0.name;
-                    }
-                    if (document.getElementById('player1-name').innerHTML != '') {
-                        data.stats['player1'].name = document.getElementById('player1-name').innerHTML;
-                    } else {
-                        document.getElementById('player1-name').innerHTML = data.stats.player1.name;
-                    }
+                    document.getElementById('player0-name').innerHTML = data.stats.player0.name;
+                    document.getElementById('player1-name').innerHTML = data.stats.player1.name;
 
                     // race icon
                     var player0_race = returnRace(data.stats.player0.race);
@@ -220,9 +196,9 @@
                     <div class="stats-item-number" id="player0-manna">0</div>
                 </div>
 
-                <div class="middle" id="player0-name" contenteditable="true"></div>
+                <div class="middle" id="player0-name"></div>
                 <div class="middle" id="vs" contenteditable="true">vs</div>
-                <div class="middle" id="player1-name" contenteditable="true"></div>
+                <div class="middle" id="player1-name"></div>
 
                 <div class="middle" id="player0-soldiers">0</div>
                 <div class="middle" id="player1-soldiers">0</div>

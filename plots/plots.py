@@ -33,6 +33,24 @@ def get_general_values(filename, property):
             return data
 
 
+# get array with all player names and array with slot number
+def get_all_names(filename):
+    numberOfPlayers = get_general_values(filename, 'numberOfPlayers')
+    player_names = []
+    slots = []
+    count = 0
+    for i in range(20):
+        player_name = get_player_values(filename, player_number=i, property='name')
+        if (player_name != ""):
+            player_names.append(player_name)
+            slots.append(i)
+            count += 1
+            if (count is numberOfPlayers):
+                break
+            
+    return player_names, slots
+
+
 # append multiple saves 
 def combine_ticks(filename_list):
     combined_values = np.array([], dtype=np.int64)
@@ -55,9 +73,9 @@ def combine_values(filename_list, player_number, property):
 # stack all players to 2d-array
 def stack_values(filename_list, property):
     stacked_values = combine_values(filename_list, 0, property)
-    for i in range(1, 4):  # TODO: change to taken spots -> player name required
+    player_names, slots = get_all_names(filename_list[0])
+    for i in slots[1:]:
         combined_values = combine_values(filename_list, i, property)
-        # TODO: only stack taken spots -> player name required
         stacked_values = np.vstack((stacked_values, combined_values))
 
     # clean-up
@@ -78,12 +96,15 @@ def stack_values(filename_list, property):
 def plot_stats(filename_list, property, n_xticks=None):
     data = stack_values(filename_list, property)
     x = combine_ticks(filename_list)
+    player_names, slots = get_all_names(filename_list[0])
+    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    colors = [colors[i] for i in slots]
 
     # plot curves
     fig, ax = plt.subplots() 
     for i in range(data.shape[0]):
         y = data[i][:]
-        ax.plot(x, y, label='Player'+str(i))  # TODO: player name 
+        ax.plot(x, y, label=player_names[i], color=colors[i])
 
     # formatting
     formatter = matplotlib.ticker.FuncFormatter(lambda datapoint, x: time.strftime('%H:%M', time.gmtime(round(datapoint / 15.63))))
@@ -103,11 +124,11 @@ def stack_chart(filename_list):
     soldiers_rel = np.flip(soldiers / soldiers_sum, axis=0)
     x = combine_ticks(filename_list)
     number_of_players = soldiers.shape[0]
-    player_names = ['Player'+str(i) for i in range(number_of_players)]  # TODO: player names
-    
-    # flip color cycle
-    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    player_names, slots = get_all_names(filename_list[0])
 
+    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    colors = [colors[i] for i in slots]
+    
     # plot stack chart
     fig, ax = plt.subplots() 
     plt.stackplot(x, soldiers_rel, labels=player_names, colors=colors[:number_of_players][::-1], alpha=0.75)
@@ -140,8 +161,8 @@ def stack_chart(filename_list):
             ymin = 0
             for j in range(i):
                 ymin += soldiers_rel[j][l2_index]
-            plt.vlines(x[l2_index], ymin=ymin, ymax=ymin+soldiers_rel[i][l2_index], linewidth=0.8, colors='white', 
-                       path_effects=[pe.SimpleLineShadow(shadow_color='grey'), pe.Normal()])
+            plt.vlines(x[l2_index], ymin=ymin, ymax=ymin+soldiers_rel[i][l2_index], linewidth=1.4, colors='grey')
+            plt.vlines(x[l2_index], ymin=ymin, ymax=ymin+soldiers_rel[i][l2_index], linewidth=0.8, colors='white')
 
         manna_l3 = np.where(manna[i][:] >= 110)
         if np.any(manna_l3):
@@ -149,8 +170,8 @@ def stack_chart(filename_list):
             ymin = 0
             for j in range(i):
                 ymin += soldiers_rel[j][l3_index]
-            plt.vlines(x[l3_index], ymin=ymin, ymax=ymin+soldiers_rel[i][l3_index], linewidth=0.8, colors='white',
-                       path_effects=[pe.SimpleLineShadow(shadow_color='grey'), pe.Normal()])
+            plt.vlines(x[l3_index], ymin=ymin, ymax=ymin+soldiers_rel[i][l3_index], linewidth=1.4, colors='grey')
+            plt.vlines(x[l3_index], ymin=ymin, ymax=ymin+soldiers_rel[i][l3_index], linewidth=0.8, colors='white')
 
     plt.show()
 
@@ -212,10 +233,11 @@ def team_chart(filename_list):
 
 if __name__ == '__main__':
     # testrecording
-    filename_list = ['example/s3-2021-04-26-02-46-37.json']
-    # plot_stats(filename_list, property='buildings')
-    # plot_stats(filename_list, property='soldiers')
+    filename_list = ['example/2021-05-09_23-19-56.json']
 
-    # stack_chart(filename_list)
+    plot_stats(filename_list, property='buildings')
+    plot_stats(filename_list, property='soldiers')
+
+    stack_chart(filename_list)
 
     team_chart(filename_list)

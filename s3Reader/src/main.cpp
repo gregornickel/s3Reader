@@ -41,15 +41,29 @@ int GetValue(HANDLE& processHandle, uintptr_t gameBaseAddress, unsigned int offs
 }
 
 int GetValue(HANDLE& processHandle, uintptr_t gameBaseAddress, std::vector<unsigned int> offset) {
-	uintptr_t value = NULL;
-	ReadProcessMemory(processHandle, (BYTE*)(gameBaseAddress + offset.front()), &value, sizeof(value), NULL);
-	for (size_t i = 1; i < offset.size(); i++) {
-		ReadProcessMemory(processHandle, (BYTE*)((int)value + offset[i]), &value, sizeof(value), NULL);
+	uintptr_t value = gameBaseAddress;
+	for (size_t i = 0; i < offset.size(); i++) {
+		ReadProcessMemory(processHandle, (BYTE*)((int)value +  offset[i]), &value, sizeof(value), NULL);
 	}
 
 	return value;
 }
 
+std::string GetName(HANDLE& processHandle, uintptr_t gameBaseAddress, std::vector<unsigned int> offset) {
+	uintptr_t value = gameBaseAddress;
+	for (size_t i = 0; i < offset.size() - 1; i++) {
+		ReadProcessMemory(processHandle, (BYTE*)((int)value +  offset[i]), &value, sizeof(value), NULL);
+	}
+
+	char cValue[32];  // buffer of 32 characters
+	bool bReturn = ReadProcessMemory(processHandle, (BYTE*)((int)value + offset[offset.size() - 1]), cValue, 31, NULL); 
+	if (bReturn == 0) {
+		// error condition: no player name on the heap 
+		cValue[0] = { '\0' };
+	}
+	
+	return std::string(cValue);
+}
 
 int main() {
 	HWND hGameWindow = FindWindow(NULL, "S3");
@@ -83,8 +97,9 @@ int main() {
 	unsigned int offsetNumberOfPlayers = 0x3ACFA4;
 
 	// initial stat offsets for player0, next player stats have an additional offset of +0x44 each
-	unsigned int initialTeamOffset = 0x3ACFC0;
+	std::vector<unsigned int> initialNameAddress{ 0x3ACFB4, 0x00 };  // two level pointer 
 	std::vector<unsigned int> initialRaceAddress{ 0x3A7A78, 0x0064 };  // two level pointer 
+	unsigned int initialTeamOffset = 0x3ACFC0;
 	unsigned int initialSettlersOffset = 0x3ACFCC;
 	unsigned int initialBuildingsOffset = 0x3ACFD0;
 	unsigned int initialFoodOffset = 0x3ACFD4;
@@ -137,31 +152,40 @@ int main() {
 			int numberOfPlayers = GetValue(processHandle, gameBaseAddress, offsetNumberOfPlayers);
 			j["general"]["numberOfPlayers"] = numberOfPlayers;
 			jOverlay["general"]["numberOfPlayers"] = numberOfPlayers;
-			// TODO: player names
+
+			// TODO: only record taken spots
+			std::string previousPlayerName = "";
 
 			for (size_t i = 0; i < 20; i++)  // iterate over all 20 player slots
 			{
 				std::string player = "player" + std::to_string(i);
 
 				// additional offsets between players
-				unsigned int stats_offset = 0x44 * i;
-				std::vector<unsigned int> race_offset = { initialRaceAddress[0], initialRaceAddress[1] + (unsigned int)(0xCC * i) };
+				std::vector<unsigned int> nameOffset = { initialNameAddress[0] + (unsigned int)(0x44 * i), initialNameAddress[1]};
+				std::vector<unsigned int> raceOffset = { initialRaceAddress[0], initialRaceAddress[1] + (unsigned int)(0xCC * i) };
+				unsigned int statsOffset = 0x44 * i;
 
-				int team = GetValue(processHandle, gameBaseAddress, initialTeamOffset + stats_offset);
-				int race = GetValue(processHandle, gameBaseAddress, race_offset);
-				int settlers = GetValue(processHandle, gameBaseAddress, initialSettlersOffset + stats_offset);
-				int buildings = GetValue(processHandle, gameBaseAddress, initialBuildingsOffset + stats_offset);
-				int food = GetValue(processHandle, gameBaseAddress, initialFoodOffset + stats_offset);
-				int mines = GetValue(processHandle, gameBaseAddress, initialMinesOffset + stats_offset);
-				int gold = GetValue(processHandle, gameBaseAddress, initialGoldOffset + stats_offset) / 2;
-				int manna = GetValue(processHandle, gameBaseAddress, InitialMannaOffset + stats_offset);
-				int soldiers = GetValue(processHandle, gameBaseAddress, initialSoldiersOffset + stats_offset);
-				int battles = GetValue(processHandle, gameBaseAddress, initialBattlesOffset + stats_offset);
+				std::string name = GetName(processHandle, gameBaseAddress, nameOffset);
+				int race = GetValue(processHandle, gameBaseAddress, raceOffset);
+				int team = GetValue(processHandle, gameBaseAddress, initialTeamOffset + statsOffset);
+				int settlers = GetValue(processHandle, gameBaseAddress, initialSettlersOffset + statsOffset);
+				int buildings = GetValue(processHandle, gameBaseAddress, initialBuildingsOffset + statsOffset);
+				int food = GetValue(processHandle, gameBaseAddress, initialFoodOffset + statsOffset);
+				int mines = GetValue(processHandle, gameBaseAddress, initialMinesOffset + statsOffset);
+				int gold = GetValue(processHandle, gameBaseAddress, initialGoldOffset + statsOffset) / 2;
+				int manna = GetValue(processHandle, gameBaseAddress, InitialMannaOffset + statsOffset);
+				int soldiers = GetValue(processHandle, gameBaseAddress, initialSoldiersOffset + statsOffset);
+				int battles = GetValue(processHandle, gameBaseAddress, initialBattlesOffset + statsOffset);
 				int score = settlers*2 + buildings + food + mines + gold*2 + manna + soldiers*2 + battles*5;
 
-				j["stats"][player]["name"] = "";
-				j["stats"][player]["team"] = team;
+				// note: this excludes multiple computer opponents
+				if (previousPlayerName != name) {
+					j["stats"][player]["name"] = name;
+				} else {
+					j["stats"][player]["name"] = "";
+				}
 				j["stats"][player]["race"] = race;
+				j["stats"][player]["team"] = team;
 				j["stats"][player]["settlers"].push_back(settlers);
 				j["stats"][player]["buildings"].push_back(buildings);
 				j["stats"][player]["food"].push_back(food);
@@ -172,9 +196,13 @@ int main() {
 				j["stats"][player]["battles"].push_back(battles);
 				j["stats"][player]["score"].push_back(score);
 
-				jOverlay["stats"][player]["name"] = "";
-				jOverlay["stats"][player]["team"] = team;
+				if (previousPlayerName != name) {
+					jOverlay["stats"][player]["name"] = name;
+				} else {
+					jOverlay["stats"][player]["name"] = "";
+				}
 				jOverlay["stats"][player]["race"] = race;
+				jOverlay["stats"][player]["team"] = team;
 				jOverlay["stats"][player]["settlers"] = settlers;
 				jOverlay["stats"][player]["buildings"] = buildings;
 				jOverlay["stats"][player]["food"] = food;
@@ -184,6 +212,8 @@ int main() {
 				jOverlay["stats"][player]["soldiers"] = soldiers;
 				jOverlay["stats"][player]["battles"] = battles;
 				jOverlay["stats"][player]["score"] = score;
+
+				previousPlayerName = name;
 
 				if ((int)j["stats"]["entries"] > 1) {
 					if (gold < j["stats"][player]["gold"][(int)j["stats"]["entries"] - 1]) {
