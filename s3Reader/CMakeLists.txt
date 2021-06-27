@@ -7,6 +7,12 @@ project(s3Reader VERSION 0.1)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_executable(s3Reader src/main.cpp)
+set(S3READER_FILES
+        src/GameHandler.cpp)
 
-target_include_directories(s3Reader PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+# add_executable(s3Reader src/main.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp ${S3READER_FILES})
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+include_directories(include)

@@ -1,104 +1,27 @@
-#include <windows.h>
-#include <TlHelp32.h>
 #include <iostream>
+#include <fstream>  // std::ofstream
 #include <iomanip>  // std::setw
 #include <chrono>
 #include <thread>
-#include <fstream>  // std::ofstream
-#include <tchar.h>  // _tcscmp
 #include <vector>
 #include "lib/nlohmann/json.hpp"
+#include "GameHandler.h"
 
 // for convenience
 using json = nlohmann::json;
 
-uintptr_t GetModuleBaseAddress(DWORD processId, TCHAR* moduleName) {
-	uintptr_t moduleBaseAddress = 0;
-	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId);  // snapshot of all modules within process
-	MODULEENTRY32 moduleEntry = { 0 };
-	moduleEntry.dwSize = sizeof(MODULEENTRY32);
-
-	if (Module32First(hSnapshot, &moduleEntry))  // store first module in moduleEntry
-	{
-		do {
-			if (_tcscmp(moduleEntry.szModule, moduleName) == 0)  // search for the module we are looking for
-			{
-				moduleBaseAddress = (uintptr_t)moduleEntry.modBaseAddr;
-				break;
-			}
-		} while (Module32Next(hSnapshot, &moduleEntry));  // go through module entries in snapshot and store in moduleEntry
-	}
-	CloseHandle(hSnapshot);
-
-	return moduleBaseAddress;
-}
-
-int GetValue(HANDLE& processHandle, uintptr_t gameBaseAddress, unsigned int offset) {
-	uintptr_t value = NULL;
-	ReadProcessMemory(processHandle, (BYTE*)(gameBaseAddress + offset), &value, sizeof(value), NULL);
-
-	return value;
-}
-
-int GetValue(HANDLE& processHandle, uintptr_t gameBaseAddress, std::vector<unsigned int> offset) {
-	uintptr_t value = gameBaseAddress;
-	for (size_t i = 0; i < offset.size(); i++) {
-		ReadProcessMemory(processHandle, (BYTE*)((int)value +  offset[i]), &value, sizeof(value), NULL);
-	}
-
-	return value;
-}
-
-std::string GetName(HANDLE& processHandle, uintptr_t gameBaseAddress, std::vector<unsigned int> offset) {
-	uintptr_t value = gameBaseAddress;
-	for (size_t i = 0; i < offset.size() - 1; i++) {
-		ReadProcessMemory(processHandle, (BYTE*)((int)value +  offset[i]), &value, sizeof(value), NULL);
-	}
-
-	char cValue[32];  // buffer of 32 characters
-	bool bReturn = ReadProcessMemory(processHandle, (BYTE*)((int)value + offset[offset.size() - 1]), cValue, 31, NULL); 
-	if (bReturn == 0) {
-		// error condition: no player name on the heap 
-		cValue[0] = { '\0' };
-	}
-	
-	return std::string(cValue);
-}
-
 int main() {
-	HWND hGameWindow = FindWindow(NULL, "S3");
-	if (hGameWindow == NULL) {
-		std::cout << "no game found, please start the game\n";
-		std::cin.get();
-		return 0;
-	} 
-	else {
-		std::cout << "game found\n";
-	}
-
-	DWORD processId = NULL;  // ID of our Game
-	GetWindowThreadProcessId(hGameWindow, &processId);
-	HANDLE processHandle = NULL;
-	processHandle = OpenProcess(PROCESS_VM_READ, FALSE, processId);
-	if (processHandle == INVALID_HANDLE_VALUE || processHandle == NULL) {
-		std::cout << "failed to open process " << processId << " (processId) with processHandle " << processHandle << "\n";
-		std::cin.get();
-		return 0;
-	}
-	else {
-		std::cout << "processHandle found\n";
-	}
-
-	char gameName[] = "s3_alobby.exe";
-	uintptr_t gameBaseAddress = GetModuleBaseAddress(processId, _T(gameName));
-	std::cout << "gameBaseAddress = " << std::hex << gameBaseAddress << std::dec << "\n";
+	std::string gameName = "s3_alobby.exe";
+	std::string windowName = "S3";
+	GameHandler s3 = GameHandler(gameName, windowName);
+	s3.find();
 
 	unsigned int offsetTick = 0x3DFD48;
 	unsigned int offsetNumberOfPlayers = 0x3ACFA4;
 
 	// initial stat offsets for player0, next player stats have an additional offset of +0x44 each
-	std::vector<unsigned int> initialNameAddress{ 0x3ACFB4, 0x00 };  // two level pointer 
-	std::vector<unsigned int> initialRaceAddress{ 0x3A7A78, 0x0064 };  // two level pointer 
+	std::vector<unsigned int> initialNameAddress{ 0x3ACFB4, 0x00 };  // two level pointer
+	std::vector<unsigned int> initialRaceAddress{ 0x3A7A78, 0x64 };  // two level pointer
 	unsigned int initialTeamOffset = 0x3ACFC0;
 	unsigned int initialSettlersOffset = 0x3ACFCC;
 	unsigned int initialBuildingsOffset = 0x3ACFD0;
@@ -142,14 +65,14 @@ int main() {
 	{
 		i++;
 
-		int tick = GetValue(processHandle, gameBaseAddress, offsetTick);
+		int tick = s3.readInt(offsetTick);
 
 		if (tick > 0) {
 			j["stats"]["tick"].push_back(tick);
 			jOverlay["stats"]["tick"] = tick;
 
 			// get constant values 
-			int numberOfPlayers = GetValue(processHandle, gameBaseAddress, offsetNumberOfPlayers);
+			int numberOfPlayers = s3.readInt(offsetNumberOfPlayers);
 			j["general"]["numberOfPlayers"] = numberOfPlayers;
 			jOverlay["general"]["numberOfPlayers"] = numberOfPlayers;
 
@@ -165,25 +88,24 @@ int main() {
 				std::vector<unsigned int> raceOffset = { initialRaceAddress[0], initialRaceAddress[1] + (unsigned int)(0xCC * i) };
 				unsigned int statsOffset = 0x44 * i;
 
-				std::string name = GetName(processHandle, gameBaseAddress, nameOffset);
-				int race = GetValue(processHandle, gameBaseAddress, raceOffset);
-				int team = GetValue(processHandle, gameBaseAddress, initialTeamOffset + statsOffset);
-				int settlers = GetValue(processHandle, gameBaseAddress, initialSettlersOffset + statsOffset);
-				int buildings = GetValue(processHandle, gameBaseAddress, initialBuildingsOffset + statsOffset);
-				int food = GetValue(processHandle, gameBaseAddress, initialFoodOffset + statsOffset);
-				int mines = GetValue(processHandle, gameBaseAddress, initialMinesOffset + statsOffset);
-				int gold = GetValue(processHandle, gameBaseAddress, initialGoldOffset + statsOffset) / 2;
-				int manna = GetValue(processHandle, gameBaseAddress, InitialMannaOffset + statsOffset);
-				int soldiers = GetValue(processHandle, gameBaseAddress, initialSoldiersOffset + statsOffset);
-				int battles = GetValue(processHandle, gameBaseAddress, initialBattlesOffset + statsOffset);
+				std::string name = s3.readString(nameOffset);
+				int race = s3.readInt(raceOffset);
+				int team = s3.readInt(initialTeamOffset + statsOffset);
+				int settlers = s3.readInt(initialSettlersOffset + statsOffset);
+				int buildings = s3.readInt(initialBuildingsOffset + statsOffset);
+				int food = s3.readInt(initialFoodOffset + statsOffset);
+				int mines = s3.readInt(initialMinesOffset + statsOffset);
+				int gold = s3.readInt(initialGoldOffset + statsOffset) / 2;
+				int manna = s3.readInt(InitialMannaOffset + statsOffset);
+				int soldiers = s3.readInt(initialSoldiersOffset + statsOffset);
+				int battles = s3.readInt(initialBattlesOffset + statsOffset);
 				int score = settlers*2 + buildings + food + mines + gold*2 + manna + soldiers*2 + battles*5;
 
 				// note: this excludes multiple computer opponents
-				if (previousPlayerName != name) {
+				if (previousPlayerName != name)
 					j["stats"][player]["name"] = name;
-				} else {
+				else
 					j["stats"][player]["name"] = "";
-				}
 				j["stats"][player]["race"] = race;
 				j["stats"][player]["team"] = team;
 				j["stats"][player]["settlers"].push_back(settlers);
@@ -196,11 +118,10 @@ int main() {
 				j["stats"][player]["battles"].push_back(battles);
 				j["stats"][player]["score"].push_back(score);
 
-				if (previousPlayerName != name) {
+				if (previousPlayerName != name)
 					jOverlay["stats"][player]["name"] = name;
-				} else {
+				else
 					jOverlay["stats"][player]["name"] = "";
-				}
 				jOverlay["stats"][player]["race"] = race;
 				jOverlay["stats"][player]["team"] = team;
 				jOverlay["stats"][player]["settlers"] = settlers;
@@ -216,9 +137,8 @@ int main() {
 				previousPlayerName = name;
 
 				if ((int)j["stats"]["entries"] > 1) {
-					if (gold < j["stats"][player]["gold"][(int)j["stats"]["entries"] - 1]) {
+					if (gold < j["stats"][player]["gold"][(int)j["stats"]["entries"] - 1])
 						gameEnded = 1;
-					}
 				}
 			}
 
