@@ -6,23 +6,24 @@
 #include <string>
 #include <windows.h>
 #include <TlHelp32.h>
-#include <tchar.h>  // _tcscmp
+#include <tchar.h> // _tcscmp
 
-class GameHandler {
-    public:
-        GameHandler(std::string gameName, std::string windowName);
-        bool find();
-        int readInt(unsigned int offset);
-        int readInt(std::vector<unsigned int> offset);
-        std::string readString(std::vector<unsigned int> offset);
+class GameHandler
+{
+public:
+    GameHandler(std::string gameName, std::string windowName);
+    bool find();
+    int readInt(unsigned int offset);
+    int readInt(std::vector<unsigned int> offset);
+    std::string readString(std::vector<unsigned int> offset);
 
-    private:
-        std::string m_gameName;
-        std::string m_windowName;
-        HANDLE m_processHandle;
-        uintptr_t m_gameBaseAddress;
+private:
+    std::string m_gameName;
+    std::string m_windowName;
+    HANDLE m_processHandle;
+    uintptr_t m_gameBaseAddress;
 
-        uintptr_t getModuleBaseAddress(DWORD processId, TCHAR* moduleName);
+    uintptr_t getModuleBaseAddress(DWORD processId, TCHAR* moduleName);
 };
 
-#endif  // S3READER_GAMEHANDLER_H_
+#endif // S3READER_GAMEHANDLER_H_
