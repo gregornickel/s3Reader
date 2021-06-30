@@ -8,7 +8,8 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(S3READER_FILES
-        src/GameHandler.cpp)
+        src/GameHandler.cpp
+        src/S3Stats.cpp)
 
 # add_executable(s3Reader src/main.cpp)
 add_executable(${PROJECT_NAME} src/main.cpp ${S3READER_FILES})

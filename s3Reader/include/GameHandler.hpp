@@ -11,11 +11,12 @@
 class GameHandler
 {
 public:
+    GameHandler();
     GameHandler(std::string gameName, std::string windowName);
     bool find();
-    int readInt(unsigned int offset);
-    int readInt(std::vector<unsigned int> offset);
-    std::string readString(std::vector<unsigned int> offset);
+    int readInt(int offset);
+    int readInt(std::vector<int> offset);
+    std::string readString(std::vector<int> offset);
 
 private:
     std::string m_gameName;

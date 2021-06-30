@@ -1,4 +1,4 @@
-#include "GameHandler.h"
+#include "GameHandler.hpp"
 
 GameHandler::GameHandler(std::string gameName, std::string windowName)
     : m_gameName{ gameName }, m_windowName{ windowName } {};
@@ -35,7 +35,7 @@ bool GameHandler::find()
     return 0;
 };
 
-int GameHandler::readInt(unsigned int offset)
+int GameHandler::readInt(int offset)
 {
     uintptr_t value = NULL;
     ReadProcessMemory(m_processHandle, (BYTE*)(m_gameBaseAddress + offset), &value, sizeof(value), NULL);
@@ -43,7 +43,7 @@ int GameHandler::readInt(unsigned int offset)
     return value;
 };
 
-int GameHandler::readInt(std::vector<unsigned int> offset)
+int GameHandler::readInt(std::vector<int> offset)
 {
     uintptr_t value = m_gameBaseAddress;
     for (size_t i = 0; i < offset.size(); i++)
@@ -52,7 +52,7 @@ int GameHandler::readInt(std::vector<unsigned int> offset)
     return value;
 };
 
-std::string GameHandler::readString(std::vector<unsigned int> offset)
+std::string GameHandler::readString(std::vector<int> offset)
 {
     uintptr_t value = m_gameBaseAddress;
     for (size_t i = 0; i < offset.size() - 1; i++)

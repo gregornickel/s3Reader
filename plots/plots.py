@@ -30,7 +30,7 @@ def get_player_values(filename, player_number, property):
             return data
 
 
-# get json about game by property ["date", "time", "numberOfPlayers", "map", "rules"]
+# get json about game by property ["date", "time", "numPlayers", "gameEnded"]
 def get_general_values(filename, property):
     with open(filename, "rb") as f:
         object = ijson.items(f, "general." + property)
@@ -40,7 +40,7 @@ def get_general_values(filename, property):
 
 # get array with all player names and array with slot number
 def get_all_names(filename):
-    number_of_players = get_general_values(filename, "numberOfPlayers")
+    number_of_players = get_general_values(filename, "numPlayers")
     player_names = []
     slots = []
     count = 0
