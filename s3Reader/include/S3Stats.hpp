@@ -19,11 +19,18 @@ public:
     void save();
 
 private:
+    void getTakenSpots();
+    int findRandomRace(int i);
+    void readRace(int i);
+    void readStats(int i);
+    void readSpellCost(int i);
+
     GameHandler s3;
     std::string filename;
     std::chrono::high_resolution_clock::time_point t1;
     json j;
     json jCast;
+    std::vector<int> takenSpots;
 };
 
 #endif // S3READER_S3STATS_H_

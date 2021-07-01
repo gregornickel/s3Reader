@@ -1,10 +1,15 @@
 #include "S3Stats.hpp"
 
+#define ROMAN 0;
+#define EGYPT 1;
+#define ASIAN 2;
+#define AMAZON 3;
+
 static int offsetTick = 0x3DFD48;
 static int offsetNumPlayers = 0x3ACFA4;
 static std::vector<int> offsetGoods{ 0x3A8244, 0x5E0 }; // two level pointer
 static std::vector<int> offsetMap{ 0x3A7A48, 0x0 };
-static int offsetMapVisible = 0x3DFD84;
+// static int offsetMapVisible = 0x3DFD84;
 static int offsetWin = 0x730F64;
 
 // initial offsets for player0, next players have additional offsets
@@ -20,24 +25,17 @@ static int offsetStatsManna = 0x3ACFE0;
 static int offsetStatsSoldiers = 0x3ACFE4;
 static int offsetStatsBattles = 0x3ACFE8;
 
-static std::vector<int> offsetMannaCurrent{ 0x3E3408, 0x1194468 };
-//        | Roman         | Egypt         | Asian         | Amazon
-// Spell1 | Convert       | Punish        | Call Help     | Cursed Arrows
-// Spell2 | Vanish        | Bann          | Samurai Sword | Freeze
-// Spell3 | Midas Touch   | Strengthen    | Shield        | Gold to Stone
-// Spell4 | Gifts         | Gifts         | Stone to Iron | Gifts
-// Spell5 | Fear          | Forest Fire   | Gifts         | Send Goods
-// Spell6 | Growth        | Fish to Meat  | Flood of Fish | Call Goods
-// Spell7 | Grassland     | Siphon Swamp  | Stone Curse   | Forest Favor
-// Spell8 | Eye           | Horus Heat    | Melt Snow     | Reveal Map
-static std::vector<int> offsetMannaSpell1{ 0x3E3408, 0x119448C };
-static std::vector<int> offsetMannaSpell2{ 0x3E3408, 0x1194488 };
-static std::vector<int> offsetMannaSpell3{ 0x3E3408, 0x1194484 };
-static std::vector<int> offsetMannaSpell4{ 0x3E3408, 0x1194480 };
-static std::vector<int> offsetMannaSpell5{ 0x3E3408, 0x119447C };
-static std::vector<int> offsetMannaSpell6{ 0x3E3408, 0x1194478 };
-static std::vector<int> offsetMannaSpell7{ 0x3E3408, 0x1194474 };
-static std::vector<int> offsetMannaSpell8{ 0x3E3408, 0x1194470 };
+//           | Roman         | Egypt         | Asian         | Amazon
+// 0x119448C | Convert       | Punish        | Call Help     | Cursed Arrows
+// 0x1194488 | Vanish        | Bann          | Samurai Sword | Freeze
+// 0x1194484 | Midas Touch   | Strengthen    | Shield        | Gold to Stone
+// 0x1194480 | Gifts         | Gifts         | Stone to Iron | Gifts
+// 0x119447C | Fear          | Forest Fire   | Gifts         | Send Goods
+// 0x1194478 | Growth        | Fish to Meat  | Flood of Fish | Call Goods
+// 0x1194474 | Grassland     | Siphon Swamp  | Stone Curse   | Forest Favor
+// 0x1194470 | Eye           | Horus Heat    | Melt Snow     | Reveal Map
+static std::vector<int> offsetMannaSpell{ 0x3E3408, 0x119448C };
+static std::vector<int> offsetMannaAvailable{ 0x3E3408, 0x1194468 };
 
 // additional offsets
 static int addOffsetRace = 0xCC;
@@ -66,7 +64,6 @@ S3Stats::S3Stats(GameHandler& s3) : s3{ s3 }
             {"entries", 0}
         }}
     };
-    jCast = j;
     // clang-format on
 
     filename = std::string(dateBuffer) + "_" + std::string(timeBuffer);
@@ -80,86 +77,44 @@ bool S3Stats::record()
     int tick = s3.readInt(offsetTick);
 
     if (tick > 0) {
+        // read constant values only ones
+        if (j["stats"]["entries"] == 0) {
+            getTakenSpots();
+
+            j["general"]["numPlayers"] = s3.readInt(offsetNumPlayers);
+            j["general"]["goods"] = s3.readInt(offsetGoods);
+            j["general"]["map"] = s3.readString(offsetMap);
+
+            for (int i : takenSpots) {
+                readRace(i);
+                std::vector<int> nameOffset = { offsetStatsName[0] + (int)(addOffsetStats * i), offsetStatsName[1] };
+                j["stats"]["player" + std::to_string(i)]["name"] = s3.readString(nameOffset);
+                j["stats"]["player" + std::to_string(i)]["team"] = s3.readInt(offsetStatsTeam + addOffsetStats * i);
+            }
+
+            jCast = j;
+        }
+
         j["stats"]["tick"].push_back(tick);
         jCast["stats"]["tick"] = tick;
+        jCast["general"]["gameWon"] = s3.readInt(offsetWin);
 
-        // get constant values
-        int numPlayers = s3.readInt(offsetNumPlayers);
-        j["general"]["numPlayers"] = numPlayers;
-        jCast["general"]["numPlayers"] = numPlayers;
+        for (int i : takenSpots) {
+            readStats(i);
+            readSpellCost(i);
 
-        // TODO: only record taken spots
-        std::string previousPlayerName = "";
-
-        for (size_t i = 0; i < 20; i++) { // iterate over all 20 player slots
+            // gold drops if game is left
             std::string player = "player" + std::to_string(i);
-
-            // additional offsets between players
-            std::vector<int> nameOffset = { offsetStatsName[0] + (int)(addOffsetStats * i), offsetStatsName[1] };
-            std::vector<int> raceOffset = { offsetRace[0], offsetRace[1] + (int)(addOffsetRace * i) };
-            int addOffset = addOffsetStats * i;
-
-            std::string name = s3.readString(nameOffset);
-            int race = s3.readInt(raceOffset);
-            int team = s3.readInt(offsetStatsTeam + addOffset);
-            int settlers = s3.readInt(offsetStatsSettlers + addOffset);
-            int buildings = s3.readInt(offsetStatsBuildings + addOffset);
-            int food = s3.readInt(offsetStatsFood + addOffset);
-            int mines = s3.readInt(offsetStatsMines + addOffset);
-            int gold = s3.readInt(offsetStatsGold + addOffset) / 2;
-            int manna = s3.readInt(offsetStatsManna + addOffset);
-            int soldiers = s3.readInt(offsetStatsSoldiers + addOffset);
-            int battles = s3.readInt(offsetStatsBattles + addOffset);
-            int score = settlers * 2 + buildings + food + mines + gold * 2 + manna + soldiers * 2 + battles * 5;
-
-            // note: this excludes multiple computer opponents
-            if (previousPlayerName != name)
-                j["stats"][player]["name"] = name;
-            else
-                j["stats"][player]["name"] = "";
-            j["stats"][player]["race"] = race;
-            j["stats"][player]["team"] = team;
-            j["stats"][player]["settlers"].push_back(settlers);
-            j["stats"][player]["buildings"].push_back(buildings);
-            j["stats"][player]["food"].push_back(food);
-            j["stats"][player]["mines"].push_back(mines);
-            j["stats"][player]["gold"].push_back(gold);
-            j["stats"][player]["manna"].push_back(manna);
-            j["stats"][player]["soldiers"].push_back(soldiers);
-            j["stats"][player]["battles"].push_back(battles);
-            j["stats"][player]["score"].push_back(score);
-
-            if (previousPlayerName != name)
-                jCast["stats"][player]["name"] = name;
-            else
-                jCast["stats"][player]["name"] = "";
-            jCast["stats"][player]["race"] = race;
-            jCast["stats"][player]["team"] = team;
-            jCast["stats"][player]["settlers"] = settlers;
-            jCast["stats"][player]["buildings"] = buildings;
-            jCast["stats"][player]["food"] = food;
-            jCast["stats"][player]["mines"] = mines;
-            jCast["stats"][player]["gold"] = gold;
-            jCast["stats"][player]["manna"] = manna;
-            jCast["stats"][player]["soldiers"] = soldiers;
-            jCast["stats"][player]["battles"] = battles;
-            jCast["stats"][player]["score"] = score;
-
-            previousPlayerName = name;
-
-            if ((int)j["stats"]["entries"] > 1) {
-                if (gold < j["stats"][player]["gold"][(int)j["stats"]["entries"] - 1])
-                    gameEnded = 1;
-            }
+            int numEntries = (int)j["stats"]["entries"];
+            if (numEntries > 1 && j["stats"][player]["gold"][numEntries] < j["stats"][player]["gold"][numEntries - 1])
+                gameEnded = 1;
         }
 
         // end recording if tick is not increasing for over 30 seconds
-        if (j["stats"]["entries"] > 60) {
-            if (gameEnded || j["stats"]["tick"][(int)j["stats"]["entries"] - 60] == tick) {
-                std::cout << "\nrecording ended" << std::endl;
-                std::cin.get();
-                // break;
-            }
+        int numEntries = (int)j["stats"]["entries"];
+        if (gameEnded || (numEntries > 60 && j["stats"]["tick"][numEntries - 60] == tick)) {
+            std::cout << "\nrecording ended" << std::endl;
+            std::cin.get();
         }
 
         auto t2 = std::chrono::high_resolution_clock::now();
@@ -186,4 +141,92 @@ void S3Stats::save()
 
     std::ofstream oo("Stats/overlay-data.json");
     oo << std::setw(4) << jCast << std::endl;
+};
+
+void S3Stats::getTakenSpots()
+{
+    for (size_t i = 0; i < 20; i++) {
+        std::vector<int> spellOffset = { offsetMannaSpell[0], offsetMannaSpell[1] + (int)(addOffsetManna * i) };
+        if (s3.readInt(spellOffset) != 1)
+            takenSpots.push_back(i);
+    }
+};
+
+int S3Stats::findRandomRace(int i)
+{
+    std::vector<int> spell1Offset = { offsetMannaSpell[0], offsetMannaSpell[1] + (int)(addOffsetManna * i) };
+    int spell1Cost = s3.readInt(spell1Offset);
+    switch (spell1Cost) {
+    case 60:
+        return ROMAN;
+    case 15:
+        return EGYPT;
+    case 10:
+        return ASIAN;
+    case 20:
+        return AMAZON;
+    default:
+        return -1;
+    }
+};
+
+void S3Stats::readRace(int i)
+{
+    std::string player = "player" + std::to_string(i);
+    std::vector<int> raceOffset = { offsetRace[0], offsetRace[1] + (int)(addOffsetRace * i) };
+    int race = s3.readInt(raceOffset);
+
+    if (race == 255) {
+        j["stats"][player]["randomRace"] = 1;
+        j["stats"][player]["race"] = findRandomRace(i);
+    } else {
+        j["stats"][player]["randomRace"] = 0;
+        j["stats"][player]["race"] = race;
+    }
+};
+
+void S3Stats::readStats(int i)
+{
+    std::string player = "player" + std::to_string(i);
+    int settlers = s3.readInt(offsetStatsSettlers + addOffsetStats * i);
+    int buildings = s3.readInt(offsetStatsBuildings + addOffsetStats * i);
+    int food = s3.readInt(offsetStatsFood + addOffsetStats * i);
+    int mines = s3.readInt(offsetStatsMines + addOffsetStats * i);
+    int gold = s3.readInt(offsetStatsGold + addOffsetStats * i) / 2;
+    int manna = s3.readInt(offsetStatsManna + addOffsetStats * i);
+    int soldiers = s3.readInt(offsetStatsSoldiers + addOffsetStats * i);
+    int battles = s3.readInt(offsetStatsBattles + addOffsetStats * i);
+    int score = settlers * 2 + buildings + food + mines + gold * 2 + manna + soldiers * 2 + battles * 5;
+
+    j["stats"][player]["settlers"].push_back(settlers);
+    j["stats"][player]["buildings"].push_back(buildings);
+    j["stats"][player]["food"].push_back(food);
+    j["stats"][player]["mines"].push_back(mines);
+    j["stats"][player]["gold"].push_back(gold);
+    j["stats"][player]["manna"].push_back(manna);
+    j["stats"][player]["soldiers"].push_back(soldiers);
+    j["stats"][player]["battles"].push_back(battles);
+    j["stats"][player]["score"].push_back(score);
+
+    jCast["stats"][player]["settlers"] = settlers;
+    jCast["stats"][player]["buildings"] = buildings;
+    jCast["stats"][player]["food"] = food;
+    jCast["stats"][player]["mines"] = mines;
+    jCast["stats"][player]["gold"] = gold;
+    jCast["stats"][player]["manna"] = manna;
+    jCast["stats"][player]["soldiers"] = soldiers;
+    jCast["stats"][player]["battles"] = battles;
+    jCast["stats"][player]["score"] = score;
+};
+
+void S3Stats::readSpellCost(int i)
+{
+    std::string player = "player" + std::to_string(i);
+    std::vector<int> mannaOffset = { offsetMannaAvailable[0], offsetMannaAvailable[1] + (int)(addOffsetManna * i) };
+    jCast["stats"][player]["mannaAvailable"] = s3.readInt(mannaOffset);
+
+    for (size_t k = 0; k < 8; k++) {
+        std::vector<int> spellOffset = { offsetMannaSpell[0], offsetMannaSpell[1] + (int)(addOffsetManna * i - k * 4) };
+        jCast["stats"][player]["spell"][k] = s3.readInt(spellOffset);
+    }
 };

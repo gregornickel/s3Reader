@@ -19,12 +19,12 @@ public:
     std::string readString(std::vector<int> offset);
 
 private:
-    std::string m_gameName;
-    std::string m_windowName;
-    HANDLE m_processHandle;
-    uintptr_t m_gameBaseAddress;
-
     uintptr_t getModuleBaseAddress(DWORD processId, TCHAR* moduleName);
+
+    std::string gameName;
+    std::string windowName;
+    HANDLE processHandle;
+    uintptr_t gameBaseAddress;
 };
 
 #endif // S3READER_GAMEHANDLER_H_

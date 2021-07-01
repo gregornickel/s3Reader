@@ -1,12 +1,12 @@
 #include "GameHandler.hpp"
 
 GameHandler::GameHandler(std::string gameName, std::string windowName)
-    : m_gameName{ gameName }, m_windowName{ windowName } {};
+    : gameName{ gameName }, windowName{ windowName } {};
 
 bool GameHandler::find()
 {
-    const char* windowName = &m_windowName[0];
-    HWND gameWindow = FindWindowA(NULL, windowName);
+    const char* buffer = &windowName[0];
+    HWND gameWindow = FindWindowA(NULL, buffer);
     if (gameWindow == NULL) {
         std::cout << "no game found, please start the game\n";
         std::cin.get();
@@ -17,10 +17,10 @@ bool GameHandler::find()
 
     DWORD processId = NULL; // ID of our Game
     GetWindowThreadProcessId(gameWindow, &processId);
-    m_processHandle = NULL;
-    m_processHandle = OpenProcess(PROCESS_VM_READ, FALSE, processId);
-    if (m_processHandle == INVALID_HANDLE_VALUE || m_processHandle == NULL) {
-        std::cout << "failed to open process " << processId << " (processId) with processHandle " << m_processHandle
+    processHandle = NULL;
+    processHandle = OpenProcess(PROCESS_VM_READ, FALSE, processId);
+    if (processHandle == INVALID_HANDLE_VALUE || processHandle == NULL) {
+        std::cout << "failed to open process " << processId << " (processId) with processHandle " << processHandle
                   << "\n";
         std::cin.get();
         return 1;
@@ -28,9 +28,9 @@ bool GameHandler::find()
         std::cout << "processHandle found\n";
     }
 
-    char* gameName = &m_gameName[0];
-    m_gameBaseAddress = getModuleBaseAddress(processId, _T(gameName));
-    std::cout << "gameBaseAddress = " << std::hex << m_gameBaseAddress << std::dec << "\n";
+    char* buffer2 = &gameName[0];
+    gameBaseAddress = getModuleBaseAddress(processId, _T(buffer2));
+    std::cout << "gameBaseAddress = " << std::hex << gameBaseAddress << std::dec << "\n";
 
     return 0;
 };
@@ -38,29 +38,28 @@ bool GameHandler::find()
 int GameHandler::readInt(int offset)
 {
     uintptr_t value = NULL;
-    ReadProcessMemory(m_processHandle, (BYTE*)(m_gameBaseAddress + offset), &value, sizeof(value), NULL);
+    ReadProcessMemory(processHandle, (BYTE*)(gameBaseAddress + offset), &value, sizeof(value), NULL);
 
     return value;
 };
 
 int GameHandler::readInt(std::vector<int> offset)
 {
-    uintptr_t value = m_gameBaseAddress;
+    uintptr_t value = gameBaseAddress;
     for (size_t i = 0; i < offset.size(); i++)
-        ReadProcessMemory(m_processHandle, (BYTE*)((int)value + offset[i]), &value, sizeof(value), NULL);
+        ReadProcessMemory(processHandle, (BYTE*)((int)value + offset[i]), &value, sizeof(value), NULL);
 
     return value;
 };
 
 std::string GameHandler::readString(std::vector<int> offset)
 {
-    uintptr_t value = m_gameBaseAddress;
+    uintptr_t value = gameBaseAddress;
     for (size_t i = 0; i < offset.size() - 1; i++)
-        ReadProcessMemory(m_processHandle, (BYTE*)((int)value + offset[i]), &value, sizeof(value), NULL);
+        ReadProcessMemory(processHandle, (BYTE*)((int)value + offset[i]), &value, sizeof(value), NULL);
 
     char buffer[32];
-    bool bReturn =
-        ReadProcessMemory(m_processHandle, (BYTE*)((int)value + offset[offset.size() - 1]), buffer, 31, NULL);
+    bool bReturn = ReadProcessMemory(processHandle, (BYTE*)((int)value + offset[offset.size() - 1]), buffer, 31, NULL);
     if (bReturn == 0) // error condition: no player name on the heap
         buffer[0] = { '\0' };
 
