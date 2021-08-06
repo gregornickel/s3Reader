@@ -9,8 +9,8 @@ wss.on('connection', ws => {
 
     setInterval(() => {
         try {
-            var json = requireUncached('C:/Users/Gregor/Documents/Developer/s3stats/s3Reader/build/Release/Stats/overlay-data.json'); 
-            // var json = requireUncached('C:/Users/Gregor/Documents/Developer/s3stats/plots/example/overlay-test-data.json'); 
+            var json = requireUncached('C:/Users/Gregor/fun/s3Reader/s3Reader/build/Release/Stats/overlay-data.json'); 
+            // var json = requireUncached('C:/Users/Gregor/fun/s3Reader/plots/example/overlay-test-data.json'); 
             ws.send(JSON.stringify(json));
         } catch (error) {
             console.error(error);
