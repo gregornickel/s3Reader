@@ -1,19 +1,20 @@
 cmake_minimum_required(VERSION 3.19)
 
-# Set the project name and version
+# Set PROJECT_NAME and version
 project(s3Reader VERSION 0.1)
 
-# Specify the C++ standard
+# Specify C++ standard
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-set(S3READER_FILES
-        src/GameHandler.cpp
-        src/S3Stats.cpp)
-
-# add_executable(s3Reader src/main.cpp)
-add_executable(${PROJECT_NAME} src/main.cpp ${S3READER_FILES})
-
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+set(FILES_S3READER
+    src/main.cpp
+    src/GameHandler.cpp
+    src/S3Stats.cpp
+)
 
 include_directories(include)
+
+add_executable(${PROJECT_NAME} ${FILES_S3READER})
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
