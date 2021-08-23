@@ -110,8 +110,20 @@
                     var teamId = 0;
                     var teamScore = 0;
 
-                    for (var i = 0; i < 20; i++) {
-                        if (data.stats['player' + i].name !== '' && data.stats['player' + i].team == teamId) {
+                    // replace for(var i = 0; i < 20; i++)
+                    // We do not have all player slots in the data as we check taken 
+                    // spots and only write data for taken spots. This section works 
+                    // now, but is very messy. @cleanup
+                    //
+                    //          -greg, 23 August 2021
+
+                    var playerIt = [];
+                    for(var k in data.stats) {
+                        if (k.includes('player')) playerIt.push(k);
+                    }
+
+                    for (var [i, element] of playerIt.entries()) {
+                        if (data.stats['player' + i].team == teamId) {
                             teamScore = teamScore + data.stats['player' + i].score;
                             var player = {
                                 id: i,
@@ -120,7 +132,7 @@
                                 score: data.stats['player' + i].score
                             };
                             players.push(player);
-                        } else if (data.stats['player' + i].name !== '') {
+                        } else {
                             players.sort((a, b) => b.score - a.score);
                             team.players = players;
                             team.teamScore = teamScore;
@@ -130,7 +142,17 @@
                             var team = new Object()
                             var players = [];
                             var teamScore = 0;
-                            i--;
+
+                            // @cleanup
+                            teamScore = teamScore + data.stats['player' + i].score;
+                            var player = {
+                                id: i,
+                                name: data.stats['player' + i].name,
+                                race: data.stats['player' + i].race,
+                                score: data.stats['player' + i].score
+                            };
+                            players.push(player);
+                            // i--;
                         }
                     }
                     if (teamId >= 0) {
@@ -140,7 +162,7 @@
                         teams.push(team);
                     }
                     teams.sort((a, b) => b.teamScore - a.teamScore);
-                    
+
                     // update score board
                     for (var i = 0; i < teams.length; i++) { 
                         var teamScore = Math.ceil(teams[i].teamScore / teams[i].players.length);
