@@ -7,7 +7,7 @@ Players soldier percentage over time, the vertical lines mark the first manna up
 
 #### Upcoming Features
 
-- [ ] Integrated websocket server
+- [x] Integrated websocket server
 - [ ] Load and continue recording of savegames
 - [ ] Improved file format for saves
 - [ ] ImGUI interface with recordings and plots

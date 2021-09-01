@@ -1,7 +1,8 @@
 #include "GameHandler.hpp"
 
-GameHandler::GameHandler(std::string gameName, std::string windowName)
-    : gameName{ gameName }, windowName{ windowName } {};
+GameHandler::GameHandler(std::string gameName, std::string windowName) : gameName{ gameName }, windowName{ windowName }
+{
+}
 
 bool GameHandler::find()
 {
@@ -33,7 +34,7 @@ bool GameHandler::find()
     std::cout << "gameBaseAddress = " << std::hex << gameBaseAddress << std::dec << "\n";
 
     return 0;
-};
+}
 
 int GameHandler::readInt(int offset)
 {
@@ -41,7 +42,7 @@ int GameHandler::readInt(int offset)
     ReadProcessMemory(processHandle, (BYTE*)(gameBaseAddress + offset), &value, sizeof(value), NULL);
 
     return value;
-};
+}
 
 int GameHandler::readInt(std::vector<int> offset)
 {
@@ -50,7 +51,7 @@ int GameHandler::readInt(std::vector<int> offset)
         ReadProcessMemory(processHandle, (BYTE*)((int)value + offset[i]), &value, sizeof(value), NULL);
 
     return value;
-};
+}
 
 std::string GameHandler::readString(std::vector<int> offset)
 {
@@ -64,7 +65,7 @@ std::string GameHandler::readString(std::vector<int> offset)
         buffer[0] = { '\0' };
 
     return std::string(buffer);
-};
+}
 
 uintptr_t GameHandler::getModuleBaseAddress(DWORD processId, TCHAR* moduleName)
 {
@@ -84,4 +85,4 @@ uintptr_t GameHandler::getModuleBaseAddress(DWORD processId, TCHAR* moduleName)
     CloseHandle(snapshot);
 
     return moduleBaseAddress;
-};
+}

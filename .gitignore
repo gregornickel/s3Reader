@@ -1,17 +1,27 @@
+# IDE stuff
+.vs
 .vscode
+.idea
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+cmake-build*
+CMakeSettings.json
 workspace.code-workspace
-*.psd
 
 # Build directories
-s3Reader/build/
-s3Reader/build-debug/
-s3Reader/build-release/
+s3Reader/build
+s3Reader/build-debug
+s3Reader/build-release
 
 # Exclude directories
 plots/example
 
 # Dependency directories
 node_modules/
+
+# Photoshop
+*.psd
 
 # macOS
 .DS_Store

@@ -1,14 +1,13 @@
-#ifndef S3READER_S3STATS_H_
-#define S3READER_S3STATS_H_
+#ifndef S3READER_S3STATS_HPP_
+#define S3READER_S3STATS_HPP_
 
 #include <iostream>
 #include <iomanip> // std::setw
 #include <fstream> // std::ofstream
 #include <chrono>
-#include "lib/nlohmann/json.hpp"
+#include "nlohmann/json.hpp"
 #include "GameHandler.hpp"
 
-// for convenience
 using json = nlohmann::json;
 
 class S3Stats
@@ -17,6 +16,7 @@ public:
     S3Stats(GameHandler& s3);
     bool record();
     void save();
+    std::string overlayData();
 
 private:
     void getTakenSpots();
@@ -33,4 +33,4 @@ private:
     std::vector<int> takenSpots;
 };
 
-#endif // S3READER_S3STATS_H_
+#endif // S3READER_S3STATS_HPP_

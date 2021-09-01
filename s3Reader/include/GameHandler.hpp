@@ -1,5 +1,5 @@
-#ifndef S3READER_GAMEHANDLER_H_
-#define S3READER_GAMEHANDLER_H_
+#ifndef S3READER_GAMEHANDLER_HPP_
+#define S3READER_GAMEHANDLER_HPP_
 
 #include <iostream>
 #include <vector>
@@ -27,4 +27,4 @@ private:
     uintptr_t gameBaseAddress;
 };
 
-#endif // S3READER_GAMEHANDLER_H_
+#endif // S3READER_GAMEHANDLER_HPP_

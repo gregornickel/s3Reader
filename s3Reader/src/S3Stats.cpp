@@ -9,7 +9,6 @@ static int offsetTick = 0x3DFD48;
 static int offsetNumPlayers = 0x3ACFA4;
 static std::vector<int> offsetGoods{ 0x3A8244, 0x5E0 }; // two level pointer
 static std::vector<int> offsetMap{ 0x3A7A48, 0x0 };
-// static int offsetMapVisible = 0x3DFD84;
 static int offsetWin = 0x730F64;
 
 // initial offsets for player0, next players have additional offsets
@@ -69,7 +68,7 @@ S3Stats::S3Stats(GameHandler& s3) : s3{ s3 }
     filename = std::string(dateBuffer) + "_" + std::string(timeBuffer);
 
     t1 = std::chrono::high_resolution_clock::now();
-};
+}
 
 bool S3Stats::record()
 {
@@ -129,7 +128,7 @@ bool S3Stats::record()
         jCast["general"]["gameEnded"] = gameEnded;
     }
     return gameEnded;
-};
+}
 
 void S3Stats::save()
 {
@@ -141,7 +140,9 @@ void S3Stats::save()
 
     std::ofstream oo("Stats/overlay-data.json");
     oo << std::setw(4) << jCast << std::endl;
-};
+}
+
+std::string S3Stats::overlayData() { return jCast.dump(); }
 
 void S3Stats::getTakenSpots()
 {
@@ -150,7 +151,7 @@ void S3Stats::getTakenSpots()
         if (s3.readInt(spellOffset) != 1)
             takenSpots.push_back(i);
     }
-};
+}
 
 int S3Stats::findRandomRace(int i)
 {
@@ -168,7 +169,7 @@ int S3Stats::findRandomRace(int i)
     default:
         return -1;
     }
-};
+}
 
 void S3Stats::readRace(int i)
 {
@@ -183,7 +184,7 @@ void S3Stats::readRace(int i)
         j["stats"][player]["randomRace"] = 0;
         j["stats"][player]["race"] = race;
     }
-};
+}
 
 void S3Stats::readStats(int i)
 {
@@ -217,7 +218,7 @@ void S3Stats::readStats(int i)
     jCast["stats"][player]["soldiers"] = soldiers;
     jCast["stats"][player]["battles"] = battles;
     jCast["stats"][player]["score"] = score;
-};
+}
 
 void S3Stats::readSpellCost(int i)
 {
@@ -229,4 +230,4 @@ void S3Stats::readSpellCost(int i)
         std::vector<int> spellOffset = { offsetMannaSpell[0], offsetMannaSpell[1] + (int)(addOffsetManna * i - k * 4) };
         jCast["stats"][player]["spell"][k] = s3.readInt(spellOffset);
     }
-};
+}
