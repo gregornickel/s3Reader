@@ -15,6 +15,9 @@ set (CMAKE_CXX_FLAGS "/EHa")
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(external/json)
 
+# glfw 3.3
+add_subdirectory(external/glfw)
+
 # boost 1.77.0
 if(WIN32)
     set(BOOST_ROOT ${CMAKE_HOME_DIRECTORY}/external/boost)
@@ -45,6 +48,7 @@ add_executable(${PROJECT_NAME} ${FILES_S3READER})
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE nlohmann_json::nlohmann_json
+    PRIVATE glfw
     PRIVATE ${Boost_LIBRARIES}
 )
 

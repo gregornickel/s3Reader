@@ -1,3 +1,6 @@
 [submodule "s3Reader/external/json"]
 	path = s3Reader/external/json
 	url = https://github.com/nlohmann/json.git
+[submodule "s3Reader/external/glfw"]
+	path = s3Reader/external/glfw
+	url = https://github.com/glfw/glfw.git
