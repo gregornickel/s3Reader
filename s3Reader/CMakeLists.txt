@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.19)
 
 # Set PROJECT_NAME and version
-project(s3Reader VERSION 0.1)
+project(s3Reader 
+    VERSION 0.0.1
+    LANGUAGES CXX C
+)
 
 # Specify C++ standard
 set(CMAKE_CXX_STANDARD 14)
@@ -10,13 +13,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Set compiler flags
 set (CMAKE_CXX_FLAGS "/EHa")
 
-# ---------- Add thrid party libraries ----------
+# ================ Add thrid party libraries ================
+
 # nlohmann json 3.10.0
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(external/json)
-
-# glfw 3.3
-add_subdirectory(external/glfw)
 
 # boost 1.77.0
 if(WIN32)
@@ -29,7 +30,12 @@ set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "external/boost/lib")
 # set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost 1.77.0 REQUIRED COMPONENTS) # header only libraries do not need to be added here
 include_directories(${Boost_INCLUDE_DIRS})
-# -----------------------------------------------
+
+add_subdirectory(external)
+
+# ===========================================================
+
+find_package(OpenGL REQUIRED)
 
 # Include header files
 include_directories(include)
@@ -44,12 +50,20 @@ set(FILES_S3READER
     src/SharedState.cpp
 )
 
-add_executable(${PROJECT_NAME} ${FILES_S3READER})
+add_executable(${PROJECT_NAME} ${FILES_S3READER} ${FILES_GLAD} ${IMGUI_SOURCES})
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE nlohmann_json::nlohmann_json
-    PRIVATE glfw
     PRIVATE ${Boost_LIBRARIES}
+    PUBLIC ${OPENGL_gl_LIBRARY}
+    PUBLIC glfw
+    PUBLIC glad
+    PUBLIC imgui
 )
 
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        external
+        ${OPENGL_INCLUDE_DIR}
+)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

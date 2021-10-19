@@ -4,3 +4,6 @@
 [submodule "s3Reader/external/glfw"]
 	path = s3Reader/external/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "s3Reader/external/imgui"]
+	path = s3Reader/external/imgui
+	url = https://github.com/ocornut/imgui.git
