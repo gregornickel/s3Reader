@@ -2,9 +2,9 @@
 .vs
 .vscode
 .idea
+*.sln
 *.vcxproj
-*.vcxproj.filters
-*.vcxproj.user
+*.vcxproj*
 cmake-build*
 CMakeSettings.json
 workspace.code-workspace
@@ -13,11 +13,13 @@ workspace.code-workspace
 s3Reader/build
 s3Reader/build-debug
 s3Reader/build-release
+s3Reader/out
 
 # Exclude directories
 plots/example
 
 # Dependency directories
+S3Reader/external/boost
 node_modules/
 
 # Photoshop
