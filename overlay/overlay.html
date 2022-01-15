@@ -110,29 +110,13 @@
                     var teamId = 0;
                     var teamScore = 0;
 
-                    // replace for(var i = 0; i < 20; i++)
-                    // We do not have all player slots in the data as we check taken 
-                    // spots and only write data for taken spots. This section works 
-                    // now, but is very messy. @cleanup
-                    //
-                    //          -greg, 23 August 2021
-
                     var playerIt = [];
                     for(var k in data.stats) {
                         if (k.includes('player')) playerIt.push(k);
                     }
 
                     for (var [i, element] of playerIt.entries()) {
-                        if (data.stats['player' + i].team == teamId) {
-                            teamScore = teamScore + data.stats['player' + i].score;
-                            var player = {
-                                id: i,
-                                name: data.stats['player' + i].name,
-                                race: data.stats['player' + i].race,
-                                score: data.stats['player' + i].score
-                            };
-                            players.push(player);
-                        } else {
+                        if (data.stats['player' + i].team != teamId) {
                             players.sort((a, b) => b.score - a.score);
                             team.players = players;
                             team.teamScore = teamScore;
@@ -142,18 +126,16 @@
                             var team = new Object()
                             var players = [];
                             var teamScore = 0;
-
-                            // @cleanup
-                            teamScore = teamScore + data.stats['player' + i].score;
-                            var player = {
-                                id: i,
-                                name: data.stats['player' + i].name,
-                                race: data.stats['player' + i].race,
-                                score: data.stats['player' + i].score
-                            };
-                            players.push(player);
-                            // i--;
                         }
+
+                        teamScore = teamScore + data.stats['player' + i].score;
+                        var player = {
+                            id: i,
+                            name: data.stats['player' + i].name,
+                            race: data.stats['player' + i].race,
+                            score: data.stats['player' + i].score
+                        };
+                        players.push(player);
                     }
                     if (teamId >= 0) {
                         players.sort((a, b) => b.score - a.score);
@@ -174,6 +156,9 @@
                             // add race icons for score 
                             document.getElementById(id).classList.add('race');
                             document.getElementById(id).classList.add(returnRace(teams[i].players[j].race));
+
+                            // add player color
+                            document.getElementById(id).classList.add('color' + data.stats[id].color);
 
                             // line-through for players who have lost the game 
                             if (data.stats[id].lost) {
@@ -275,6 +260,12 @@
                 <div class="score-item" id="player11"></div>
                 <div class="score-item" id="player12"></div>
                 <div class="score-item" id="player13"></div>
+                <div class="score-item" id="player14"></div>
+                <div class="score-item" id="player15"></div>
+                <div class="score-item" id="player16"></div>
+                <div class="score-item" id="player17"></div>
+                <div class="score-item" id="player18"></div>
+                <div class="score-item" id="player19"></div>
             </div>
         </div>
     </body>

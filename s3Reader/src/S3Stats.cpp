@@ -12,6 +12,7 @@ static std::vector<int> offsetMap{ 0x3A7A48, 0x0 };
 static int offsetWin = 0x730F64;
 
 // initial offsets for player0, next players have additional offsets
+static int offsetColor = 0x3ACE64; // unsigned 16 bit integer array with colors for each player
 static std::vector<int> offsetRace{ 0x3A7A78, 0x64 };
 static std::vector<int> offsetStatsName{ 0x3ACFB4, 0x0 };
 static int offsetStatsTeam = 0x3ACFC0;
@@ -37,6 +38,7 @@ static std::vector<int> offsetMannaSpell{ 0x3E3408, 0x119448C };
 static std::vector<int> offsetMannaAvailable{ 0x3E3408, 0x1194468 };
 
 // additional offsets
+static int addOffsetColor = 0x02;
 static int addOffsetRace = 0xCC;
 static int addOffsetStats = 0x44;
 static int addOffsetManna = 0x148;
@@ -87,6 +89,7 @@ bool S3Stats::record()
             for (int i : takenSpots) {
                 readRace(i);
                 std::vector<int> nameOffset = { offsetStatsName[0] + (int)(addOffsetStats * i), offsetStatsName[1] };
+                j["stats"]["player" + std::to_string(i)]["color"] = s3.readInt16(offsetColor + addOffsetColor * i);
                 j["stats"]["player" + std::to_string(i)]["name"] = s3.readString(nameOffset);
                 j["stats"]["player" + std::to_string(i)]["team"] = s3.readInt(offsetStatsTeam + addOffsetStats * i);
             }

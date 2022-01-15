@@ -255,74 +255,98 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-#player0 {
+.color0{
     color: #FF1C00;  /* original s3 color */
     color: #FF5555;
 }
 
-#player1 {
+.color1 {
     color: #1896FF;  /* original s3 color */
     color: #55AAFF;
 }
 
-#player2 {
+.color2 {
     color: #FFFF00;  /* original s3 color */
     color: #FFFF55;
 }
 
-#player3 {
+.color3 {
     color: #31BE5A;  /* original s3 color */
     color: #55FF55;
 }
 
-#player4 {
+.color4 {
     color: #FF9600;  /* original s3 color */
     color: #FFAA55;
 }
 
-#player5 {
+.color5 {
     color: #00FFFF;  /* original s3 color */
     color: #55FFFF;
 }
 
-#player6 {
+.color6 {
     color: #FF00FF;  /* original s3 color */
     color: #FF55FF;
 }
 
-#player7 {
+.color7 {
     color: #313031;  /* original s3 color */
     color: #444444;
 }
 
-#player8 {
+.color8 {
     color: #FFFFFF;  /* original s3 color */
     color: #F0F0F0;
 }
 
-#player9 {
+.color9 {
     color: #081CFF;  /* original s3 color */
     color: #4141FF;
 }
 
-#player10 {
+.color10 {
     color: #DE5518;  /* original s3 color */
     color: #CC5500;
 }
 
-#player11 {
+.color11 {
     color: #949694;  /* original s3 color */
     color: #909090;
 }
 
-#player12 {
+.color12 {
     color: #BD10EF;  /* original s3 color */
     color: #AA00E1;
 }
 
-#player13 {
+.color13 {
     color: #007900;  /* original s3 color */
     color: #008000;
+}
+
+.color14 {
+    color: #F7C6C5;  /* original s3 color */
+}
+
+.color15 {
+    color: #8CF7AD;  /* original s3 color */
+}
+
+.color16 {
+    color: #A4103A;  /* original s3 color */
+}
+
+.color17 {
+    color: #D692EE;  /* original s3 color */
+}
+
+.color18 {
+    color: #F7DB9C;  /* original s3 color */
+}
+
+.color19 {
+    color: #94C6F7;  /* original s3 color */
 }
 
 .race{

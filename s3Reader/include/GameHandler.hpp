@@ -16,6 +16,7 @@ public:
     bool find();
     int readInt(int offset);
     int readInt(std::vector<int> offset);
+    int readInt16(int offset);
     std::string readString(std::vector<int> offset);
 
 private:
