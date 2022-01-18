@@ -53,6 +53,14 @@ int GameHandler::readInt(std::vector<int> offset)
     return value;
 }
 
+int GameHandler::readInt16(int offset)
+{
+    uint16_t value = NULL;
+    ReadProcessMemory(processHandle, (BYTE*)(gameBaseAddress + offset), &value, sizeof(value), NULL);
+
+    return value;
+}
+
 std::string GameHandler::readString(std::vector<int> offset)
 {
     uintptr_t value = gameBaseAddress;
